@@ -1,0 +1,146 @@
+/* Карточки проверки: шапка 95px со сплошной линией */
+.confirm-card {
+  background: var(--color-white);
+  border: 1px solid #c4c4c4;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
+}
+
+.confirm-card + .confirm-card {
+  margin-top: 45px;
+}
+
+.confirm-card__title {
+  display: flex;
+  align-items: center;
+  height: 95px;
+  margin: 0;
+  padding-left: 30px;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 35px;
+  color: var(--color-dark);
+  border-bottom: 1px solid var(--color-gray);
+}
+
+/* Содержимое слева, «Изменить» справа за пунктиром */
+.confirm-card__body {
+  display: grid;
+  grid-template-columns: 1fr 281px;
+}
+
+.confirm-card__aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 22px 24px 25px;
+  border-left: 1px dashed var(--color-gray-light);
+}
+
+.confirm-card__change {
+  width: 233px;
+  min-height: 39px;
+  padding: 0;
+  text-transform: none;
+}
+
+.confirm-total {
+  display: flex;
+  align-items: center;
+  margin: 0 0 28px;
+  font-size: 30px;
+  color: var(--color-dark);
+}
+
+.confirm-total b {
+  margin-left: auto;
+}
+
+.confirm-total__ruble {
+  margin-left: 8px;
+  color: var(--color-gray);
+}
+
+/* Пассажиры */
+.confirm-passengers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.confirm-passenger {
+  display: grid;
+  grid-template-columns: 94px 1fr;
+  gap: 32px;
+  padding: 30px 28px 34px;
+}
+
+.confirm-passenger:first-child {
+  padding-top: 61px;
+}
+
+.confirm-passenger:last-child {
+  padding-bottom: 90px;
+}
+
+.confirm-passenger + .confirm-passenger {
+  border-top: 1px dashed var(--color-gray-light);
+}
+
+.confirm-passenger__type {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  font-size: 18px;
+  color: var(--color-dark);
+}
+
+.confirm-passenger__icon {
+  color: var(--color-accent);
+}
+
+.confirm-passenger__name {
+  margin: 0;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-dark);
+}
+
+.confirm-passenger__info {
+  display: grid;
+  gap: 9px;
+  margin: 14px 0 0;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-gray);
+}
+
+.confirm-passenger__info div {
+  display: flex;
+  gap: 6px;
+}
+
+.confirm-passenger__info dt,
+.confirm-passenger__info dd {
+  margin: 0;
+}
+
+/* Способ оплаты */
+.confirm-payment {
+  min-height: 146px;
+  margin: 0;
+  padding: 42px 33px;
+  font-size: 24px;
+  color: var(--color-dark);
+}
+
+.confirm-next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 123px;
+}
+
+.confirm-next__button {
+  width: 323px;
+  color: var(--color-white);
+}

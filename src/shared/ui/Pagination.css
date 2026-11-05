@@ -1,0 +1,36 @@
+.pagination {
+  display: flex;
+  gap: 35px;
+  justify-content: flex-end;
+}
+
+/* Состояния по «экспликации»: обычная, наведение (оранжевый контур), текущая */
+.pagination__item {
+  display: grid;
+  place-content: center;
+  width: 85px;
+  height: 75px;
+  padding: 0;
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--color-gray);
+  background: transparent;
+  border: 2px solid #c4c4c4;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.pagination__item:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.pagination__item:active,
+.pagination__item_current {
+  color: var(--color-white);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}

@@ -1,0 +1,53 @@
+.train-loader {
+  display: grid;
+  justify-items: center;
+}
+
+.train-loader__label {
+  margin: 0;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  text-transform: uppercase;
+  color: var(--color-gray);
+}
+
+/* Рельс 300px; поезд въезжает слева и уезжает вправо */
+.train-loader__track {
+  position: relative;
+  width: 300px;
+  height: 24px;
+  margin-top: 121px;
+  overflow: hidden;
+  border-bottom: 2px solid var(--color-accent-light);
+}
+
+.train-loader__train {
+  position: absolute;
+  top: 0;
+  left: 0;
+  fill: var(--color-accent-light);
+  animation: train-ride 2.4s linear infinite;
+}
+
+.train-loader__window {
+  fill: var(--color-text-strong);
+}
+
+@keyframes train-ride {
+  from {
+    transform: translateX(-290px);
+  }
+
+  to {
+    transform: translateX(300px);
+  }
+}
+
+/* Без анимации — поезд просто стоит на рельсе, как на макете */
+@media (prefers-reduced-motion: reduce) {
+  .train-loader__train {
+    left: 6px;
+    animation: none;
+  }
+}

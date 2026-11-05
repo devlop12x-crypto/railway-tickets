@@ -1,0 +1,51 @@
+.trains__toolbar {
+  display: flex;
+  gap: 24px;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-gray);
+}
+
+.trains__sort {
+  margin-left: auto;
+  margin-right: 24px;
+}
+
+.trains__value {
+  font-weight: 400;
+  color: var(--color-text-strong);
+}
+
+.trains__limit {
+  display: flex;
+  gap: 10px;
+}
+
+.trains__size {
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.trains__size:hover {
+  color: var(--color-accent);
+}
+
+.trains__size.trains__value {
+  color: var(--color-text-strong);
+}
+
+.trains__list {
+  display: grid;
+  gap: 48px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trains__pagination {
+  margin-top: 142px;
+}

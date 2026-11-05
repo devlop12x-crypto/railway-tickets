@@ -1,0 +1,49 @@
+/*
+ * Фото шапки страниц заказа: кадр 1954×1467 со сдвигом −32/−137 при ширине 1920.
+ * Непрозрачность и подложка подобраны по экспорту макета.
+ */
+.order-hero {
+  position: relative;
+  isolation: isolate;
+  height: 592px;
+  overflow: hidden;
+  background-color: var(--color-gray);
+}
+
+.order-hero::before {
+  position: absolute;
+  top: -137px;
+  left: -1.67%;
+  z-index: -1;
+  width: 101.8%;
+  height: 1467px;
+  content: '';
+  background: url('../assets/images/hero-order.jpg') center / cover no-repeat;
+  opacity: 0.7;
+}
+
+/* Затемнение под логотипом, как в макете */
+.order-hero::after {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: var(--header-top-height);
+  content: '';
+  background: rgb(41 41 41 / 60%);
+}
+
+.order-hero > .container {
+  padding-top: 111px;
+}
+
+.order-page {
+  padding: 95px 0 193px;
+  background: var(--color-page);
+}
+
+.order-page__grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 86px;
+  align-items: start;
+}

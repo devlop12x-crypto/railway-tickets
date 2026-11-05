@@ -1,0 +1,192 @@
+/* Высоты из макета: 268 px в одну сторону, 354 px туда-обратно */
+.train-card {
+  display: grid;
+  grid-template-columns: 197px 1fr 283px;
+  min-height: 268px;
+  background: var(--color-white);
+  border: 1px solid #c4c4c4;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 30%);
+}
+
+/* Поезд: значок, номер, маршрут */
+.train-card__train {
+  padding: 57px 12px 20px 26px;
+  background: #e4e0e9;
+}
+
+.train-card__icon {
+  display: grid;
+  place-content: center;
+  width: 86px;
+  height: 86px;
+  margin-left: 17px;
+  color: var(--color-white);
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+}
+
+.train-card__number {
+  width: 120px;
+  margin: 17px 0 0;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  text-align: center;
+  color: var(--color-text-strong);
+}
+
+.train-card__route {
+  display: grid;
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-dark);
+}
+
+.train-card__origin {
+  color: var(--color-gray);
+}
+
+/* Время отправления и прибытия: туда и, если есть, обратно */
+.train-card_round-trip {
+  min-height: 354px;
+}
+
+.train-card__legs {
+  display: grid;
+  align-content: start;
+  gap: 65px;
+  padding: 53px 20px 20px 39px;
+}
+
+.train-card__leg {
+  display: grid;
+  grid-template-columns: 154px 86px 1fr;
+}
+
+.train-card__point {
+  display: grid;
+  align-content: start;
+}
+
+.train-card__time {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  color: #000;
+}
+
+.train-card__city {
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--color-dark);
+}
+
+.train-card__station {
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-gray);
+}
+
+.train-card__duration {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  margin-top: -4px;
+}
+
+.train-card__duration-text {
+  font-size: 18px;
+  line-height: 21px;
+  color: #c4c4c4;
+}
+
+.train-card__arrow {
+  margin: 6px 0 0 5px;
+  color: rgb(255 168 0 / 79%);
+}
+
+.train-card__arrow_direction_back {
+  transform: scaleX(-1);
+}
+
+/* Места и цены, отделены пунктиром */
+.train-card__offer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 40px 20px 22px 27px;
+  border-left: 1px dashed var(--color-gray-light);
+}
+
+.train-card__seats {
+  display: grid;
+  gap: 24px;
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.train-card__seat {
+  display: grid;
+  grid-template-columns: 91px 37px 23px 1fr 24px;
+  align-items: center;
+  font-size: 16px;
+  line-height: 19px;
+}
+
+.train-card__class {
+  color: var(--color-text-strong);
+}
+
+.train-card__count {
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.train-card__from {
+  color: var(--color-gray);
+}
+
+.train-card__price {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  text-align: right;
+  color: var(--color-footer);
+}
+
+.train-card__ruble {
+  justify-self: end;
+  color: var(--color-gray);
+}
+
+.train-card__amenities {
+  margin-top: auto;
+  padding-top: 18px;
+  color: #c4c4c4;
+}
+
+.train-card__select {
+  width: 228px;
+  min-height: 39px;
+  margin-top: 19px;
+  padding: 0;
+  color: var(--color-white);
+  text-transform: none;
+}
+
+.train-card_embedded {
+  border: 0;
+  box-shadow: none;
+}
+
+/* «Изменить» на странице проверки: контурная 233×39 */
+.train-card__action {
+  width: 233px;
+  min-height: 39px;
+  margin-top: 19px;
+  padding: 0;
+  text-transform: none;
+}

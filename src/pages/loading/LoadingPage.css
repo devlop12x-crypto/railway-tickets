@@ -1,0 +1,14 @@
+/* Шапка экрана загрузки короче: 554px, панель формы — 285px */
+.loading-hero {
+  height: 554px;
+}
+
+.loading-hero .search-form_variant_compact {
+  height: 285px;
+}
+
+.loading-page {
+  min-height: 774px;
+  padding-top: 261px;
+  background: var(--color-text-strong);
+}

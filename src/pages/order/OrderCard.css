@@ -1,0 +1,56 @@
+/* Карточка страниц «Пассажиры» и «Оплата»: серая шапка 107px, секции через пунктир */
+.order-card {
+  background: var(--color-white);
+  border: 1px solid #c4c4c4;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
+}
+
+.order-card + .order-card {
+  margin-top: 43px;
+}
+
+.order-card__head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-height: 107px;
+  padding: 0 40px 0 24px;
+  background: #f9f9f9;
+}
+
+.order-card__head_plain {
+  padding-left: 36px;
+}
+
+.order-card__title {
+  flex: 1;
+  margin: 0;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 35px;
+  color: var(--color-dark);
+}
+
+.order-card__section {
+  padding: 37px 31px 37px 35px;
+  border-top: 1px dashed var(--color-gray);
+}
+
+.order-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 36px 31px 28px;
+  border-top: 1px dashed var(--color-gray);
+}
+
+/* Кнопка «Далее» / «Купить билеты» под карточками */
+.order-next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 103px;
+}
+
+.order-next__button {
+  min-width: 222px;
+  color: var(--color-white);
+}

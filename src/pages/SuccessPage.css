@@ -1,0 +1,170 @@
+/* Как в макете: фото с непрозрачностью 70% поверх тёмной подложки */
+.success-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 834px;
+  overflow: hidden;
+  background-color: var(--color-dark);
+}
+
+.success-hero::before {
+  position: absolute;
+  /* Кадрирование макета: 1981×1185, сдвиг −21/−318 при ширине 1920 */
+  top: -318px;
+  left: -1.1%;
+  z-index: -1;
+  width: 103.2%;
+  height: 1185px;
+  content: '';
+  background: url('../assets/images/hero-success.jpg') center / cover no-repeat;
+  opacity: 0.7;
+}
+
+.success-hero__title {
+  margin: 0;
+  padding-top: 371px;
+  font-weight: 700;
+  font-size: 72px;
+  line-height: 1;
+}
+
+.success-page {
+  padding-bottom: 175px;
+  background: var(--color-page);
+}
+
+/* Карточка заезжает на фото */
+.success-card {
+  position: relative;
+  margin-top: -208px;
+  background: var(--color-white);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+
+.success-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 147px;
+  padding: 0 78px 0 82px;
+  border-bottom: 1px solid #c8c7c9;
+}
+
+.success-card__number {
+  margin: 0;
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--color-text-strong);
+}
+
+.success-card__sum {
+  margin: 0;
+  font-size: 36px;
+  color: var(--color-gray);
+}
+
+.success-card__amount {
+  margin-left: 0.3em;
+  color: var(--color-text-strong);
+}
+
+.success-card__currency {
+  margin-left: 0.3em;
+}
+
+.success-card__steps {
+  display: flex;
+  justify-content: center;
+  height: 312px;
+  margin: 0;
+  padding: 40px 0 0 12px;
+  list-style: none;
+  background: var(--color-panel);
+}
+
+.success-card__step {
+  width: 300px;
+  text-align: center;
+}
+
+/* Оранжевый круг с белым кольцом */
+.success-card__step-icon {
+  box-sizing: content-box;
+  width: 129px;
+  height: 129px;
+  margin: 0 auto;
+  border: 13px solid var(--color-white);
+  border-radius: 50%;
+}
+
+.success-card__step-text {
+  margin: 10px 0 0;
+  font-size: 18px;
+  line-height: 20px;
+  white-space: pre-line;
+  color: var(--color-dark);
+}
+
+.success-card__body {
+  padding: 95px 82px 128px 205px;
+  color: var(--color-dark);
+}
+
+.success-card__name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.success-card__text {
+  margin: 47px 0 0;
+  line-height: 29px;
+}
+
+.success-card__thanks {
+  margin: 92px 0 0;
+  font-weight: 700;
+}
+
+.success-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 161px;
+  padding: 0 78px 0 83px;
+  background: rgb(255 168 0 / 88%);
+}
+
+.rating {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.rating__label {
+  color: var(--color-dark);
+}
+
+.rating__stars {
+  display: flex;
+  gap: 13px;
+}
+
+.rating__star {
+  display: block;
+  padding: 0;
+  color: var(--color-white);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.rating__star:hover {
+  color: var(--color-dark);
+}
+
+.rating__star:active {
+  color: var(--color-text-strong);
+}
