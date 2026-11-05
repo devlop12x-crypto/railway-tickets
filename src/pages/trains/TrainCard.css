@@ -1,7 +1,7 @@
 /* Высоты из макета: 268 px в одну сторону, 354 px туда-обратно */
 .train-card {
   display: grid;
-  grid-template-columns: 197px 1fr 283px;
+  grid-template-columns: 197px minmax(0, 1fr) 283px;
   min-height: 268px;
   background: var(--color-white);
   border: 1px solid #c4c4c4;
@@ -56,12 +56,12 @@
   display: grid;
   align-content: start;
   gap: 65px;
-  padding: 53px 20px 20px 39px;
+  padding: 53px 20px 20px clamp(16px, 2vw, 39px);
 }
 
 .train-card__leg {
   display: grid;
-  grid-template-columns: 154px 86px 1fr;
+  grid-template-columns: minmax(0, 154px) minmax(60px, 86px) minmax(0, 1fr);
 }
 
 .train-card__point {
