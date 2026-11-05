@@ -59,11 +59,12 @@
 
 .passenger__type {
   width: 280px;
+  max-width: 100%;
 }
 
 .passenger__names {
   display: grid;
-  grid-template-columns: repeat(3, 280px);
+  grid-template-columns: repeat(3, minmax(0, 280px));
   gap: 25px;
   margin-top: 45px;
 }
@@ -146,13 +147,13 @@
 
 .passenger__docs {
   display: grid;
-  grid-template-columns: repeat(3, 205px);
+  grid-template-columns: repeat(3, minmax(0, 205px));
   gap: 35px;
   padding-bottom: 32px;
 }
 
 .passenger__docs_birth {
-  grid-template-columns: 444px 207px;
+  grid-template-columns: minmax(0, 444px) minmax(0, 207px);
 }
 
 .passenger__mask::placeholder {

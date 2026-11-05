@@ -5,8 +5,9 @@
 
 .footer__columns {
   display: grid;
-  grid-template-columns: 602px 1fr;
-  padding: 47px 0 55px 82px;
+  grid-template-columns: minmax(0, 602px) minmax(0, 1fr);
+  gap: 24px;
+  padding: 47px 0 55px clamp(0px, 5vw, 82px);
 }
 
 .footer__title {
@@ -63,12 +64,14 @@
 
 .subscribe__row {
   display: flex;
+  max-width: 648px;
   gap: 33px;
   margin-top: 17px;
 }
 
 .subscribe__input {
-  width: 447px;
+  flex: 1 1 447px;
+  min-width: 0;
   height: 60px;
   padding: 0 20px;
   color: var(--color-dark);
@@ -81,6 +84,7 @@
 }
 
 .subscribe__submit {
+  flex: none;
   width: 168px;
   padding: 0;
   font-weight: 300;

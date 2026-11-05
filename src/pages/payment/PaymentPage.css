@@ -1,11 +1,12 @@
 .payment__names {
   display: grid;
-  grid-template-columns: repeat(3, 280px);
+  grid-template-columns: repeat(3, minmax(0, 280px));
   gap: 25px;
 }
 
 .payment__contact {
   width: 360px;
+  max-width: 100%;
   margin-top: 54px;
 }
 
@@ -28,7 +29,7 @@
 
 .payment__systems {
   display: grid;
-  grid-template-columns: 240px 204px 1fr;
+  grid-template-columns: minmax(0, 240px) minmax(0, 204px) minmax(0, 1fr);
   margin: 28px 0 0;
   padding: 0;
   list-style: none;

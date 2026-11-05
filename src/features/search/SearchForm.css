@@ -77,7 +77,8 @@
 
 /* На главной: панель справа от слогана, прижата к низу блока */
 .search-form_variant_hero {
-  width: 729px;
+  flex: 0 1 729px;
+  min-width: 0;
   margin-right: -25px;
   padding: 77px 21px 52px;
   background: rgb(41 41 41 / 80%);

@@ -10,7 +10,8 @@
 
 .order-steps__list {
   display: grid;
-  grid-template-columns: calc(var(--edge) + 362px) 361px 361px 1fr;
+  grid-template-columns: calc(var(--edge) + 362px) 361px 361px minmax(0, 1fr);
+  overflow: hidden;
   height: 98px;
   margin: 0;
   padding: 0;
