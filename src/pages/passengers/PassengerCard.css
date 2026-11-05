@@ -1,0 +1,200 @@
+/* Круглая кнопка свернуть/развернуть: серая с минусом или оранжевая с плюсом */
+.passenger__toggle {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: none;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.passenger__toggle::before,
+.passenger__toggle::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  content: '';
+  background: var(--color-accent);
+  transform: translate(-50%, -50%);
+}
+
+.passenger__toggle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.passenger__toggle_open {
+  border-color: var(--color-gray);
+}
+
+.passenger__toggle_open::before {
+  background: var(--color-gray);
+}
+
+.passenger__toggle_open::after {
+  display: none;
+}
+
+.passenger__remove {
+  display: grid;
+  padding: 0;
+  color: var(--color-gray);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.passenger__remove:hover {
+  color: var(--color-accent);
+}
+
+.passenger__main {
+  padding-top: 37px;
+  padding-bottom: 30px;
+}
+
+.passenger__type {
+  width: 280px;
+}
+
+.passenger__names {
+  display: grid;
+  grid-template-columns: repeat(3, 280px);
+  gap: 25px;
+  margin-top: 45px;
+}
+
+.passenger__row {
+  display: flex;
+  gap: 35px;
+  margin-top: 50px;
+}
+
+.passenger__gender {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.passenger__gender legend {
+  padding: 0;
+  margin-bottom: 15px;
+}
+
+/* Пол: две половины 101px, выбранная — оранжевая */
+.gender {
+  display: flex;
+  width: 204px;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid var(--color-gray);
+  border-radius: var(--radius);
+}
+
+.gender__option {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-content: center;
+  cursor: pointer;
+}
+
+.gender__option + .gender__option {
+  border-left: 1px solid var(--color-gray);
+}
+
+.gender__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.gender__letter {
+  font-weight: 900;
+  font-size: 30px;
+  line-height: 35px;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.gender__option:has(.gender__input:checked) {
+  background: var(--color-accent);
+}
+
+.gender__option:hover:not(:has(.gender__input:checked)) {
+  background: var(--color-accent-light);
+}
+
+.gender__option:has(.gender__input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -4px;
+}
+
+.passenger__birth {
+  width: 240px;
+}
+
+.passenger__mobility {
+  margin-top: 45px;
+}
+
+.passenger__docs {
+  display: grid;
+  grid-template-columns: repeat(3, 205px);
+  gap: 35px;
+  padding-bottom: 32px;
+}
+
+.passenger__docs_birth {
+  grid-template-columns: 444px 207px;
+}
+
+.passenger__mask::placeholder {
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.passenger__next {
+  min-height: 52px;
+  padding: 0 22px;
+  text-transform: none;
+}
+
+/* Свёрнутые карточки */
+.passenger-stub {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  height: 97px;
+  padding: 0 40px 0 24px;
+  font: inherit;
+  font-size: 30px;
+  line-height: 35px;
+  text-align: left;
+  color: var(--color-dark);
+  cursor: pointer;
+}
+
+.passenger-stub_add {
+  justify-content: space-between;
+}
+
+.passenger-stub:hover {
+  border-color: var(--color-accent);
+}
+
+.passenger-stub__plus {
+  color: var(--color-accent);
+}
+
+.order-card + .passenger-stub,
+.passenger-stub + .passenger-stub {
+  margin-top: 45px;
+}

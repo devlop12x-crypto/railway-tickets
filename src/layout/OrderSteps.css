@@ -1,0 +1,68 @@
+/*
+ * Полоса шагов на всю ширину. Первый шаг тянется от края экрана до 362 px
+ * за левым краем контейнера, остальные — по 361 px, последний занимает остаток.
+ */
+.order-steps {
+  --edge: max(20px, (100% - var(--container-width)) / 2);
+
+  background: var(--color-text-strong);
+}
+
+.order-steps__list {
+  display: grid;
+  grid-template-columns: calc(var(--edge) + 362px) 361px 361px 1fr;
+  height: 98px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-steps__item {
+  position: relative;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding-left: 35px;
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--color-white);
+}
+
+.order-steps__item:first-child {
+  /* % у элемента грида считается от ширины его колонки: (край + 362) − 390 = край − 28 */
+  padding-left: calc(100% - 390px);
+}
+
+/* Шеврон-разделитель между шагами */
+.order-steps__item:not(:last-child)::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 37px;
+  height: 100%;
+  content: '';
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 37 98' preserveAspectRatio='none'%3E%3Cpolyline points='0,0 36,49 0,98' fill='none' stroke='%23e5e5e5' stroke-width='1'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+.order-steps__item_state_done,
+.order-steps__item_state_current {
+  background: var(--color-accent);
+}
+
+/* У текущего шага оранжевая стрелка заходит на следующий */
+.order-steps__item_state_current:not(:last-child) {
+  clip-path: polygon(0 0, calc(100% - 37px) 0, 100% 50%, calc(100% - 37px) 100%, 0 100%);
+}
+
+.order-steps__number {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 56px;
+  height: 56px;
+  font-size: 36px;
+  line-height: 1;
+  border: 3px solid var(--color-white);
+  border-radius: 50%;
+}

@@ -1,0 +1,12 @@
+.amenities {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.amenities__item {
+  display: flex;
+}

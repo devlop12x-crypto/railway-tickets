@@ -1,0 +1,447 @@
+.direction {
+  padding: 36px 0 81px;
+  background: var(--color-white);
+  border: 1px solid #c4c4c4;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
+}
+
+.direction_back {
+  padding-bottom: 61px;
+}
+
+.direction + .direction {
+  margin-top: 29px;
+}
+
+.direction__head {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 0 19px;
+}
+
+.direction_back .direction__head {
+  justify-content: flex-end;
+}
+
+.direction__badge {
+  display: grid;
+  place-content: center;
+  width: 76px;
+  height: 60px;
+  color: var(--color-white);
+  background: var(--color-accent);
+  border-radius: var(--radius);
+}
+
+.direction__badge-icon_back,
+.direction__arrow_back {
+  transform: scaleX(-1);
+}
+
+.direction__change {
+  width: 325px;
+  text-transform: none;
+}
+
+/* Полоса с поездом */
+.direction__train {
+  display: grid;
+  grid-template-columns: 240px 480px 1fr;
+  height: 123px;
+  margin-top: 32px;
+  background: #f7f6f6;
+}
+
+.direction__train > * + * {
+  border-left: 1px solid var(--color-white);
+}
+
+.direction__train-info {
+  display: flex;
+  gap: 27px;
+  align-items: center;
+  padding-left: 35px;
+}
+
+.direction__train-icon {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+}
+
+.direction__train-number {
+  margin: 0;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  color: var(--color-text-strong);
+}
+
+.direction__train-route {
+  display: grid;
+  margin: 4px 0 0;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-dark);
+}
+
+.direction__train-origin {
+  color: var(--color-gray);
+}
+
+.direction__times {
+  display: grid;
+  grid-template-columns: 155px 84px 1fr;
+  align-items: start;
+  padding: 28px 0 0 36px;
+}
+
+.direction__point {
+  display: grid;
+}
+
+.direction__time {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  color: #000;
+}
+
+.direction__city {
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--color-dark);
+}
+
+.direction__station {
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-gray);
+}
+
+.direction__arrow {
+  margin-top: 26px;
+  color: rgb(255 168 0 / 79%);
+}
+
+.direction__duration {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-left: 32px;
+  font-size: 18px;
+  line-height: 21px;
+  white-space: pre-line;
+  color: #000;
+}
+
+.direction__clock {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.direction__title {
+  margin: 40px 0 0;
+  padding-left: 19px;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 35px;
+  color: var(--color-dark);
+}
+
+/* Пунктир над «Тип вагона» */
+.direction__title_divided {
+  margin-top: 49px;
+  padding-top: 27px;
+  border-top: 1px dashed #c4c4c4;
+}
+
+/* Количество билетов */
+.tickets {
+  display: grid;
+  grid-template-columns: 317px 318px 1fr;
+  margin-top: 21px;
+}
+
+.tickets__group {
+  min-height: 192px;
+  padding: 20px 20px 20px 36px;
+  border: 1px solid transparent;
+}
+
+.tickets__group_state_filled {
+  background: #f7f6f6;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
+}
+
+.tickets__group_state_focused {
+  border-color: rgb(255 168 0 / 79%);
+}
+
+.tickets__group:nth-child(2) {
+  padding-left: 43px;
+}
+
+.tickets__group:nth-child(3) {
+  padding-left: 43px;
+}
+
+.tickets__select {
+  width: 240px;
+  height: 50px;
+  padding: 0 10px 0 15px;
+  font-size: 18px;
+  color: var(--color-dark);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray);
+  border-radius: var(--radius);
+  appearance: none;
+  cursor: pointer;
+}
+
+.tickets__select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.tickets__hint {
+  max-width: 241px;
+  margin: 23px 0 0;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-gray);
+}
+
+.tickets__hint_strong {
+  max-width: 190px;
+  color: #000;
+}
+
+/* Тип вагона */
+.coach-types {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 240px));
+  margin-top: 33px;
+  padding-left: 35px;
+}
+
+.coach-types__item {
+  display: grid;
+  justify-items: center;
+  justify-self: start;
+  gap: 18px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 28px;
+  color: var(--color-dark);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.coach-types__icon {
+  display: grid;
+  place-items: end center;
+  height: 50px;
+  color: #c4c4c4;
+}
+
+.coach-types__item_state_muted {
+  color: var(--color-gray);
+}
+
+.coach-types__item:hover,
+.coach-types__item:hover .coach-types__icon {
+  color: var(--color-accent-light);
+}
+
+.coach-types__item_state_active,
+.coach-types__item_state_active .coach-types__icon {
+  color: var(--color-accent);
+}
+
+/* Вагоны выбранного типа */
+.coaches-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 37px;
+  margin-top: 26px;
+  padding: 0 11px 0 33px;
+  background: rgb(255 168 0 / 44%);
+}
+
+.coaches-bar__list {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 18px;
+  color: var(--color-footer);
+}
+
+.coaches-bar__number {
+  padding: 0;
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--color-dark);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.coaches-bar__number_current {
+  color: var(--color-white);
+}
+
+.coaches-bar__note {
+  font-size: 16px;
+  color: var(--color-dark);
+}
+
+/* Сведения о вагоне */
+.coach {
+  display: grid;
+  grid-template-columns: 190px 242px 200px 1fr;
+  gap: 0 0;
+}
+
+.coach__badge {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  height: 161px;
+  font-size: 24px;
+  line-height: 28px;
+  color: var(--color-dark);
+  background: #ffd98f;
+}
+
+.coach__number {
+  font-weight: 700;
+  font-size: 72px;
+  line-height: 76px;
+}
+
+.coach__column {
+  padding: 33px 0 0 85px;
+}
+
+.coach__caption {
+  margin: 0;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-gray);
+}
+
+.coach__caption-value {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--color-dark);
+}
+
+.coach__company {
+  margin-left: 6px;
+  color: #c4c4c4;
+}
+
+.coach__row b {
+  margin-left: 0.3em;
+}
+
+.coach__price b {
+  margin-left: 0;
+}
+
+.coach__row {
+  margin: 0;
+  font-size: 24px;
+  line-height: 28px;
+  color: #000;
+}
+
+.coach__caption + .coach__row {
+  margin-top: 22px;
+}
+
+.coach__row + .coach__row {
+  margin-top: 18px;
+}
+
+.coach__price {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.coach__ruble {
+  color: var(--color-gray);
+}
+
+.coach__services {
+  display: flex;
+  gap: 13px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coach__service {
+  display: grid;
+  place-content: center;
+  width: 36px;
+  height: 34px;
+  color: var(--color-dark);
+  border: 1px solid var(--color-dark);
+  border-radius: var(--radius);
+}
+
+/* Состояния по «экспликации»: не выбрано, выбрано, включено в стоимость */
+.coach__service_state_on {
+  color: #f4f2f6;
+  background: rgb(255 168 0 / 79%);
+  border-color: transparent;
+}
+
+.coach__service_state_included {
+  color: var(--color-gray);
+  background: #fcdc9d;
+  border-color: transparent;
+}
+
+.coach__watching {
+  width: 199px;
+  margin: 59px 0 0;
+  padding: 16px;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-dark);
+  background: #f3f3f3;
+  border-radius: var(--radius);
+}
+
+.direction__scheme {
+  margin-top: -9px;
+  padding-left: 20px;
+}
+
+/* Несколько вагонов: блоки разделены пунктиром */
+.coach-block + .coach-block {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px dashed #c4c4c4;
+}
+
+.coach-block__total {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 25px 38px 0 0;
+  font-size: 24px;
+  color: var(--color-accent);
+}

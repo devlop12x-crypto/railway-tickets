@@ -1,0 +1,111 @@
+/*
+ * Кнопки по «экспликации» макета. У каждого варианта три состояния:
+ * обычное, :hover и :active (+ неактивное, где оно есть в макете).
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  padding: 0 32px;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Основная: «Найти билеты», «Далее», «Подтвердить» */
+.button_variant_primary {
+  color: var(--color-dark);
+  background: var(--color-accent);
+}
+
+.button_variant_primary:hover {
+  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
+}
+
+.button_variant_primary:active {
+  color: var(--color-accent);
+  background: var(--color-white);
+  border-color: var(--color-accent);
+  box-shadow: none;
+}
+
+.button_variant_primary:disabled {
+  color: var(--color-white);
+  background: var(--color-gray);
+  border-color: var(--color-gray);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* Контурная на светлом фоне: «Изменить», «Сохранить» */
+.button_variant_outline {
+  color: var(--color-dark);
+  background: var(--color-white);
+  border-color: var(--color-dark);
+}
+
+.button_variant_outline:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.button_variant_outline:active {
+  color: var(--color-dark);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* Контурная на тёмном фоне: «Узнать больше», «Отправить» */
+.button_variant_ghost {
+  color: var(--color-white);
+  background: transparent;
+  border-color: var(--color-white);
+}
+
+.button_variant_ghost:hover {
+  color: var(--color-dark);
+  background: var(--color-accent-light);
+  border-color: var(--color-accent-light);
+}
+
+.button_variant_ghost:active {
+  color: var(--color-dark);
+  background: var(--color-white);
+  border-color: var(--color-white);
+}
+
+/* Тёмный контур на оранжевом фоне: «Вернуться на главную» */
+.button_variant_outline-dark {
+  width: 323px;
+  padding: 0;
+  color: var(--color-dark);
+  background: transparent;
+  border-color: var(--color-dark);
+}
+
+.button_variant_outline-dark:hover {
+  color: var(--color-white);
+  background: var(--color-dark);
+}
+
+.button_variant_outline-dark:active {
+  color: var(--color-dark);
+  background: var(--color-white);
+  border-color: var(--color-white);
+}

@@ -1,0 +1,141 @@
+.search-form {
+  color: var(--color-white);
+}
+
+.search-form__group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.search-form__legend {
+  padding: 0 0 0 9px;
+  font-weight: 300;
+  font-size: 30px;
+  line-height: 36px;
+}
+
+/* Поле, промежуток под кнопку смены городов, поле */
+.search-form__row {
+  display: grid;
+  grid-template-columns: 1fr 37px 1fr;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.search-form__row > .search-form__field:last-child {
+  grid-column: 3;
+}
+
+.search-form__field {
+  position: relative;
+}
+
+.search-form__input {
+  width: 100%;
+  height: 60px;
+  padding: 0 60px 0 21px;
+  font-size: 18px;
+  color: var(--color-dark);
+  background: var(--color-white);
+  border: 0;
+  border-radius: var(--radius);
+}
+
+.search-form__input::placeholder {
+  color: var(--color-gray-light);
+}
+
+.search-form__icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: var(--color-gray-light);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-form__swap {
+  display: grid;
+  place-content: center;
+  height: 60px;
+  padding: 0;
+  color: var(--color-gray-light);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.search-form__swap:hover {
+  color: var(--color-accent-light);
+}
+
+.search-form__swap:active {
+  color: var(--color-accent);
+}
+
+/* На главной: панель справа от слогана, прижата к низу блока */
+.search-form_variant_hero {
+  width: 729px;
+  margin-right: -25px;
+  padding: 77px 21px 52px;
+  background: rgb(41 41 41 / 80%);
+}
+
+.search-form_variant_hero .search-form__group + .search-form__group {
+  margin-top: 59px;
+}
+
+.search-form_variant_hero .search-form__submit {
+  display: flex;
+  width: calc((100% - 37px) / 2);
+  margin: 92px 0 0 auto;
+}
+
+/* Страницы заказа: полупрозрачная панель шире контейнера на 43 px с каждой стороны */
+.search-form_variant_compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  align-items: start;
+  column-gap: 35px;
+  height: 350px;
+  margin: 0 -44px;
+  padding: 28px 44px 0;
+  background: rgb(41 41 41 / 69%);
+}
+
+.search-form_variant_compact .search-form__legend {
+  padding-left: 8px;
+}
+
+.search-form_variant_compact .search-form__row {
+  margin-top: 17px;
+}
+
+.search-form_variant_compact .search-form__input {
+  padding-left: 19px;
+  border-radius: 3px;
+}
+
+.search-form_variant_compact .search-form__submit {
+  grid-column: 2;
+  justify-self: end;
+  width: 323px;
+  margin-top: 47px;
+}
+
+/* Во время поиска кнопка остаётся «нажатой»: оранжевый контур и тень */
+.search-form__submit_loading,
+.search-form__submit_loading:disabled {
+  color: var(--color-accent);
+  background: transparent;
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
+  cursor: progress;
+}
+
+.search-form_variant_compact.search-form_short {
+  height: 285px;
+}

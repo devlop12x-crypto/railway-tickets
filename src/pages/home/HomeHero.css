@@ -1,0 +1,44 @@
+/*
+ * Как в макете: фото с непрозрачностью 69% поверх охристой подложки.
+ * Исходник в Figma отражён, поэтому файл сохранён уже отражённым.
+ * Рамка фото повторяет кадрирование макета (2085×1171, сдвиг −31/−45 при ширине 1920),
+ * а cover сохраняет пропорции на других ширинах.
+ */
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #9a6909;
+  border-bottom: 8px solid var(--color-accent);
+}
+
+.home-hero::before {
+  position: absolute;
+  top: -45px;
+  left: -1.6%;
+  z-index: -1;
+  width: 108.6%;
+  height: 1171px;
+  content: '';
+  background: url('../../assets/images/hero-home.jpg') center / cover no-repeat;
+  opacity: 0.69;
+}
+
+.home-hero__inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 819px;
+}
+
+.home-hero__title {
+  margin: 0 0 237px 90px;
+  font-weight: 100;
+  font-size: 72px;
+  line-height: 84px;
+}
+
+.home-hero__accent {
+  display: block;
+  font-weight: 700;
+}

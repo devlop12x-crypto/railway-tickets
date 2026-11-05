@@ -1,0 +1,75 @@
+.payment__names {
+  display: grid;
+  grid-template-columns: repeat(3, 280px);
+  gap: 25px;
+}
+
+.payment__contact {
+  width: 360px;
+  margin-top: 54px;
+}
+
+.payment__contact + .payment__contact {
+  margin-top: 38px;
+}
+
+.payment__personal {
+  padding-bottom: 85px;
+}
+
+.payment__method {
+  font-size: 24px;
+  color: var(--color-gray);
+}
+
+.payment__online {
+  padding-bottom: 50px;
+}
+
+.payment__systems {
+  display: grid;
+  grid-template-columns: 240px 204px 1fr;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  color: var(--color-dark);
+}
+
+.payment__systems li {
+  max-width: 190px;
+}
+
+.payment__cash {
+  padding-top: 56px;
+  padding-bottom: 82px;
+}
+
+.payment .order-card__head {
+  border-bottom: 1px dashed var(--color-gray);
+}
+
+.payment .order-card__head + .order-card__section {
+  border-top: 0;
+}
+
+.payment .order-next {
+  margin-top: 116px;
+}
+
+.payment__fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.payment__method-head {
+  border-top: 1px dashed var(--color-gray);
+}
+
+.payment .order-next__button {
+  min-width: 323px;
+}

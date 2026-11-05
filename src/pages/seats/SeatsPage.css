@@ -1,0 +1,23 @@
+.seats__title {
+  margin: 4px 0 0;
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 35px;
+  text-transform: uppercase;
+  color: var(--color-dark);
+}
+
+.seats__title + .direction {
+  margin-top: 56px;
+}
+
+.seats__next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 102px;
+}
+
+.seats__next-button {
+  width: 222px;
+  color: var(--color-white);
+}
