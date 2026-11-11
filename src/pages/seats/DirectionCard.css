@@ -266,6 +266,11 @@
   color: var(--color-accent);
 }
 
+.coach-types__item:active,
+.coach-types__item:active .coach-types__icon {
+  color: var(--color-accent-dark);
+}
+
 /* Вагоны выбранного типа */
 .coaches-bar {
   display: flex;
@@ -293,6 +298,14 @@
   background: none;
   border: 0;
   cursor: pointer;
+}
+
+.coaches-bar__number:hover {
+  color: var(--color-white);
+}
+
+.coaches-bar__number:active {
+  color: var(--color-accent-dark);
 }
 
 .coaches-bar__number_current {

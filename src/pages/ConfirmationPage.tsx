@@ -61,7 +61,12 @@ export function ConfirmationPage() {
             Поезд
           </h2>
           {ROUTE && (
-            <TrainCard route={ROUTE} embedded action={{ label: 'Изменить', to: ROUTES.trains }} />
+            <TrainCard
+              route={ROUTE}
+              embedded
+              headingLevel={3}
+              action={{ label: 'Изменить', to: ROUTES.trains }}
+            />
           )}
         </section>
 

@@ -18,6 +18,7 @@ export function LoadingPage() {
         </div>
       </section>
       <main className="loading-page">
+        <h1 className="visually-hidden">Поиск билетов</h1>
         <TrainLoader />
       </main>
     </>

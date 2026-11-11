@@ -60,8 +60,18 @@ const SERVICE_STATE_LABELS: Record<ServiceState, string> = {
 /** Сведения о вагоне, схема и сумма за выбранные места */
 function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
   const counts = countByTier(type, coach.available);
-  const hasTiers = type === 'second' || type === 'third';
-  const prices = hasTiers ? [coach.prices.upper, coach.prices.lower] : [coach.prices.single];
+  // Строки «ярус — свободно — цена»; у люкса и сидячего ярусов нет, только общая цена
+  const tiers: { label: string; count: number; price: number | undefined }[] =
+    type === 'second' || type === 'third'
+      ? [
+          { label: 'Верхние', count: counts.upper, price: coach.prices.upper },
+          { label: 'Нижние', count: counts.lower, price: coach.prices.lower },
+        ]
+      : [];
+  if (type === 'third') {
+    tiers.push({ label: 'Боковые', count: counts.side, price: coach.prices.side });
+  }
+  const prices = tiers.length > 0 ? tiers.map(({ price }) => price) : [coach.prices.single];
   const total = coach.selected ? totalPrice(type, coach.prices, coach.selected) : 0;
 
   return (
@@ -75,16 +85,11 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
           <p className="coach__caption">
             Места <b className="coach__caption-value">{coach.available.size}</b>
           </p>
-          {hasTiers && (
-            <>
-              <p className="coach__row">
-                Верхние <b>{counts.upper}</b>
-              </p>
-              <p className="coach__row">
-                Нижние <b>{counts.lower}</b>
-              </p>
-            </>
-          )}
+          {tiers.map(({ label, count }) => (
+            <p key={label} className="coach__row">
+              {label} <b>{count}</b>
+            </p>
+          ))}
         </div>
         <div className="coach__column">
           <p className="coach__caption">Стоимость</p>
@@ -169,12 +174,13 @@ export function DirectionCard(props: DirectionCardProps) {
   const [coachType, setCoachType] = useState(props.coachType);
   const coachSet = coachType ? coachesByType[coachType] : undefined;
   const shownNumbers = new Set(coachSet?.coaches.map(({ number }) => number));
+  const title = direction === 'there' ? 'Туда' : 'Обратно';
 
   return (
-    <section
-      className={`direction direction_${direction}`}
-      aria-label={direction === 'there' ? 'Туда' : 'Обратно'}
-    >
+    <section className={`direction direction_${direction}`} aria-labelledby={`${id}-title`}>
+      <h2 className="visually-hidden" id={`${id}-title`}>
+        {title}
+      </h2>
       <div className="direction__head">
         <span className="direction__badge" aria-hidden="true">
           <Icon

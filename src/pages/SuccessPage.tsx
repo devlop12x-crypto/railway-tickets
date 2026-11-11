@@ -3,8 +3,10 @@ import email from '../assets/images/success/email.png';
 import conductor from '../assets/images/success/conductor.png';
 import print from '../assets/images/success/print.png';
 import { ROUTES } from '../shared/config/routes';
+import { formatPrice } from '../shared/lib/formatPrice';
 import { Icon } from '../shared/ui/Icon';
 import { PageTitle } from '../shared/ui/PageTitle';
+import { MOCK_TRIP_DETAILS } from './order/mock';
 import './SuccessPage.css';
 
 /** Шаги после покупки. Акцентная часть подписи выделена жирным, как в макете */
@@ -40,7 +42,7 @@ const RATING_MAX = 5;
  */
 export function SuccessPage() {
   return (
-    <>
+    <main>
       <PageTitle title="Заказ оформлен" />
       <section className="page-hero success-hero">
         <div className="container">
@@ -48,13 +50,13 @@ export function SuccessPage() {
         </div>
       </section>
 
-      <main className="success-page">
+      <div className="success-page">
         <article className="container success-card">
           <header className="success-card__head">
             <h2 className="success-card__number">№Заказа 285АА</h2>
             <p className="success-card__sum">
-              сумма <b className="success-card__amount">7 760</b>
-              <span className="success-card__currency">₽</span>
+              сумма <b className="success-card__amount">{formatPrice(MOCK_TRIP_DETAILS.total)}</b>
+              <Icon className="success-card__currency" name="ruble" size={27} />
             </p>
           </header>
 
@@ -111,7 +113,7 @@ export function SuccessPage() {
             </Link>
           </footer>
         </article>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

@@ -39,6 +39,24 @@
   display: none;
 }
 
+.passenger__toggle:hover {
+  border-color: var(--color-accent-light);
+}
+
+.passenger__toggle:hover::before,
+.passenger__toggle:hover::after {
+  background: var(--color-accent-light);
+}
+
+.passenger__toggle:active {
+  border-color: var(--color-accent-dark);
+}
+
+.passenger__toggle:active::before,
+.passenger__toggle:active::after {
+  background: var(--color-accent-dark);
+}
+
 .passenger__remove {
   display: grid;
   padding: 0;
@@ -50,6 +68,10 @@
 
 .passenger__remove:hover {
   color: var(--color-accent);
+}
+
+.passenger__remove:active {
+  color: var(--color-accent-dark);
 }
 
 .passenger__main {
@@ -189,6 +211,16 @@
 
 .passenger-stub:hover {
   border-color: var(--color-accent);
+}
+
+.passenger-stub:active {
+  background: #fff6e5;
+  border-color: var(--color-accent-dark);
+}
+
+/* Внутри «Пассажир 3» значок — span, а не кнопка: реагирует на наведение карточки */
+.passenger-stub:hover .passenger__toggle {
+  border-color: var(--color-accent-light);
 }
 
 .passenger-stub__plus {

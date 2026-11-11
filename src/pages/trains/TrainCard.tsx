@@ -40,9 +40,12 @@ interface TrainCardProps {
   embedded?: boolean;
   /** Кнопка справа внизу; по умолчанию «Выбрать места» */
   action?: { label: string; to: string };
+  /** Уровень заголовка с номером поезда: 2 в списке, 3 внутри карточки «Поезд» */
+  headingLevel?: 2 | 3;
 }
 
-export function TrainCard({ route, embedded = false, action }: TrainCardProps) {
+export function TrainCard({ route, embedded = false, action, headingLevel = 2 }: TrainCardProps) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const { trainNumber, origin, fromCity, toCity, trainName, there, back, seats, amenities } = route;
   const classes = ['train-card'];
   if (back) classes.push('train-card_round-trip');
@@ -54,7 +57,7 @@ export function TrainCard({ route, embedded = false, action }: TrainCardProps) {
         <span className="train-card__icon">
           <Icon name="train" size={64} />
         </span>
-        <h3 className="train-card__number">{trainNumber}</h3>
+        <Heading className="train-card__number">{trainNumber}</Heading>
         <p className="train-card__route">
           {origin && <span className="train-card__origin">{origin} →</span>}
           <span>{fromCity} →</span>

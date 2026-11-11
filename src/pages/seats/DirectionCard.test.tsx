@@ -18,6 +18,8 @@ describe('выбор мест', () => {
     expect(
       within(there).getByRole('button', { name: 'Место 33, боковое, свободно' }),
     ).toBeEnabled();
+    // Строки ярусов сходятся с общим числом мест: у обоих вагонов есть «Боковые»
+    expect(within(there).getAllByText('Боковые')).toHaveLength(2);
   });
 
   it('занятые места недоступны, выбранные отмечены', async () => {

@@ -78,6 +78,10 @@
   border-color: var(--color-accent-light);
 }
 
+.trip-details__collapse:active {
+  border-color: var(--color-accent-dark);
+}
+
 .trip-details__train {
   display: grid;
   grid-template-columns: auto 1fr;

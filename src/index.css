@@ -2,6 +2,8 @@
 :root {
   --color-accent: #ffa800;
   --color-accent-light: #ffca62;
+  /* Нажатое состояние мелких текстовых кнопок, тот же оттенок, что у :active основной */
+  --color-accent-dark: #e39400;
   --color-icon-warm: #d08a28;
   --color-how-base: #bf7e00;
   --color-dark: #292929;
