@@ -58,6 +58,8 @@
 }
 
 .success-card__sum {
+  display: flex;
+  align-items: center;
   margin: 0;
   font-size: 36px;
   color: var(--color-gray);
@@ -69,7 +71,7 @@
 }
 
 .success-card__currency {
-  margin-left: 0.3em;
+  margin-left: 0.4em;
 }
 
 .success-card__steps {

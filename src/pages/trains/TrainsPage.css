@@ -34,6 +34,10 @@
   color: var(--color-accent);
 }
 
+.trains__size:active {
+  color: var(--color-accent-dark);
+}
+
 .trains__size.trains__value {
   color: var(--color-text-strong);
 }

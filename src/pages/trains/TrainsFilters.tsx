@@ -102,15 +102,15 @@ function Direction({ label, icon, expanded }: DirectionProps) {
   );
 }
 
-/**
- * Боковая панель фильтров. Этап 2 — вёрстка; переключатели нативные,
- * календарь, слайдер цены и время отправления заработают на этапе 3.
- */
 interface TrainsFiltersProps {
   /** Раскрыть блоки времени «Туда» и «Обратно» (так на макете выбора мест) */
   expandedDirections?: boolean;
 }
 
+/**
+ * Боковая панель фильтров. Этап 2 — вёрстка; переключатели нативные,
+ * календарь, слайдер цены и время отправления заработают на этапе 3.
+ */
 export function TrainsFilters({ expandedDirections = false }: TrainsFiltersProps) {
   const id = useId();
 

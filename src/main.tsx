@@ -16,6 +16,8 @@ import '@fontsource/roboto/cyrillic-900.css';
 import '@fontsource/roboto/latin-900.css';
 import './index.css';
 import './shared/ui/button.css';
+import './shared/ui/form.css';
+import './shared/ui/order-card.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

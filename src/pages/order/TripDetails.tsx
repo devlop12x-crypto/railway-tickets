@@ -29,7 +29,7 @@ function Leg({ leg, direction }: { leg: TripDetailsLeg; direction: 'there' | 'ba
   const title = direction === 'there' ? 'Туда' : 'Обратно';
 
   return (
-    <section className="trip-details__section" aria-label={title}>
+    <section className="trip-details__section">
       <div className="trip-details__head">
         <span className="trip-details__badge">
           <Icon name={direction === 'there' ? 'arrowForward' : 'arrowBack'} size={18} />
@@ -93,7 +93,7 @@ export function TripDetails({ data }: { data: TripDetailsData }) {
       <Leg leg={data.there} direction="there" />
       {data.back && <Leg leg={data.back} direction="back" />}
 
-      <section className="trip-details__section" aria-label="Пассажиры">
+      <section className="trip-details__section">
         <div className="trip-details__head">
           <Icon className="trip-details__person" name="person" size={30} />
           <h3 className="trip-details__title">Пассажиры</h3>

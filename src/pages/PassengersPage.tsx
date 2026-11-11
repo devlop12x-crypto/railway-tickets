@@ -1,9 +1,7 @@
 import { Link } from 'react-router';
 import { ROUTES } from '../shared/config/routes';
 import { PageTitle } from '../shared/ui/PageTitle';
-import '../shared/ui/form.css';
 import { MOCK_TRIP_DETAILS } from './order/mock';
-import './order/OrderCard.css';
 import { TripDetails } from './order/TripDetails';
 import { PassengerCard, PassengerStub, type PassengerDraft } from './passengers/PassengerCard';
 

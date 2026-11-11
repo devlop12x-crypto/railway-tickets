@@ -88,6 +88,7 @@ describe('экран загрузки', () => {
   it('показывает статус поиска и неактивную кнопку', () => {
     renderRoute(ROUTES.loading);
 
+    expect(screen.getByRole('heading', { level: 1, name: 'Поиск билетов' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Идет поиск');
     expect(screen.getByRole('button', { name: 'Найти билеты' })).toBeDisabled();
   });
