@@ -7,6 +7,15 @@ import { afterEach, vi } from 'vitest';
 vi.stubGlobal('scrollTo', vi.fn());
 Element.prototype.scrollIntoView = vi.fn();
 
+// В jsdom у <dialog> нет showModal/close — достаточно переключать атрибут open
+HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+  this.setAttribute('open', '');
+};
+HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+  this.removeAttribute('open');
+  this.dispatchEvent(new Event('close'));
+};
+
 // globals в Vitest выключены, поэтому автоочистка Testing Library не срабатывает сама
 afterEach(() => {
   cleanup();

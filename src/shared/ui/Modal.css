@@ -1,0 +1,90 @@
+/* Размеры по «экспликации»: 666px, цветная шапка 106px, подвал за пунктиром */
+.modal {
+  width: min(666px, calc(100vw - 32px));
+  padding: 0;
+  color: #000;
+  background: var(--color-white);
+  border: 1px solid #c4c4c4;
+  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
+}
+
+.modal::backdrop {
+  background: rgb(41 41 41 / 50%);
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  height: 106px;
+  padding: 0 40px;
+}
+
+.modal_variant_error .modal__head {
+  background: var(--color-error-bg);
+}
+
+.modal_variant_info .modal__head {
+  background: var(--color-info-bg);
+}
+
+.modal_variant_info .modal__body {
+  background: #fbfbfb;
+}
+
+.modal__icon {
+  display: grid;
+  place-content: center;
+  width: 26px;
+  height: 26px;
+  font-weight: 900;
+  font-size: 18px;
+  border-radius: 50%;
+}
+
+.modal_variant_error .modal__icon {
+  color: var(--color-error-bg);
+  background: #ffebe5;
+}
+
+.modal_variant_info .modal__icon {
+  font-family: Georgia, serif;
+  color: #fcf9a1;
+  background: #e5e3e9;
+}
+
+.modal__body {
+  padding: 50px 50px 46px;
+}
+
+.modal__title {
+  margin: 0 0 26px;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+}
+
+.modal__text {
+  font-size: 16px;
+  line-height: 19px;
+}
+
+.modal__text p {
+  margin: 0;
+}
+
+.modal__text p + p {
+  margin-top: 19px;
+}
+
+.modal__footer {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0;
+  border-top: 1px dashed var(--color-gray);
+}
+
+.modal__close {
+  width: 233px;
+  min-height: 52px;
+  text-transform: none;
+}

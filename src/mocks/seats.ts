@@ -1,5 +1,5 @@
-import type { SeatClass, TripLeg } from '../trains/types';
-import type { CoachSet, ServiceId, ServiceState } from './coach';
+import type { SeatClass, TripLeg } from '../entities/train/types';
+import type { CoachSet, ServiceId, ServiceState } from '../entities/coach/coach';
 
 /** Данные с макетов выбора мест. Настоящие придут из API на этапе 4 */
 
@@ -85,4 +85,14 @@ export const COACHES_BY_TYPE: Partial<Record<SeatClass, CoachSet>> = {
       },
     ],
   },
+};
+
+/** Поезд на макете выбора мест */
+export const SEATS_TRAIN = {
+  trainNumber: '116С',
+  origin: 'Адлер',
+  fromCity: 'Москва',
+  toCity: 'Санкт-Петербург',
+  leg: SEATS_LEG,
+  durationText: '9 часов\n42 минуты',
 };

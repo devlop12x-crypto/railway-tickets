@@ -43,6 +43,32 @@ export default defineConfig(
     },
   },
 
+  // Слои: shared → entities → api → features → layout/pages → app. Импорт только «вниз»:
+  // переиспользуемое не знает о страницах, а данные макета (mocks) видит только api.
+  ...[
+    ['src/shared/**', ['entities', 'api', 'features', 'layout', 'pages', 'app', 'mocks']],
+    ['src/entities/**', ['api', 'features', 'layout', 'pages', 'app', 'mocks']],
+    ['src/api/**', ['features', 'layout', 'pages', 'app']],
+    ['src/features/**', ['layout', 'pages', 'app', 'mocks']],
+    ['src/layout/**', ['pages', 'app', 'mocks']],
+  ].map(([layer, forbidden]) => ({
+    files: [`${layer}/*.{ts,tsx}`],
+    ignores: ['src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: forbidden.flatMap((name) => [`**/${name}`, `**/${name}/**`]),
+              message: 'Нарушение слоёв: импорт возможен только из нижележащих слоёв.',
+            },
+          ],
+        },
+      ],
+    },
+  })),
+
   {
     files: ['*.{js,ts}'],
     languageOptions: {

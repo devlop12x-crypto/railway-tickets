@@ -1,4 +1,4 @@
-import type { SeatClass } from '../trains/types';
+import type { SeatClass } from '../train/types';
 
 /** Логика вагона без вёрстки: ярусы мест и цены. Пригодится и на этапах 3–4 */
 

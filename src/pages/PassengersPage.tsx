@@ -1,37 +1,10 @@
 import { Link } from 'react-router';
 import { ROUTES } from '../shared/config/routes';
 import { PageTitle } from '../shared/ui/PageTitle';
-import { MOCK_TRIP_DETAILS } from './order/mock';
-import { TripDetails } from './order/TripDetails';
-import { PassengerCard, PassengerStub, type PassengerDraft } from './passengers/PassengerCard';
-
-/** Пассажиры с макета: взрослая Ирина и ребёнок Кирилл, третий — свёрнут */
-const PASSENGERS: PassengerDraft[] = [
-  {
-    type: 'adult',
-    lastName: 'Мартынюк',
-    firstName: 'Ирина',
-    patronymic: 'Эдуардовна',
-    gender: 'female',
-    birthDate: '',
-    limitedMobility: false,
-    document: 'passport',
-    series: '',
-    number: '',
-  },
-  {
-    type: 'child',
-    lastName: '',
-    firstName: '',
-    patronymic: '',
-    gender: 'male',
-    birthDate: '',
-    limitedMobility: false,
-    document: 'birth',
-    series: '',
-    number: '',
-  },
-];
+import { MOCK_TRIP_DETAILS } from '../mocks/order';
+import { MOCK_PASSENGERS } from '../mocks/passengers';
+import { TripDetails } from '../features/trip-details/TripDetails';
+import { PassengerCard, PassengerStub } from '../features/passenger-form/PassengerCard';
 
 export function PassengersPage() {
   return (
@@ -42,7 +15,7 @@ export function PassengersPage() {
         <h1 className="visually-hidden" id="passengers-title">
           Пассажиры
         </h1>
-        {PASSENGERS.map((passenger, index) => (
+        {MOCK_PASSENGERS.map((passenger, index) => (
           <PassengerCard key={index} index={index + 1} passenger={passenger} />
         ))}
         <PassengerStub label="Пассажир 3" variant="collapsed" />

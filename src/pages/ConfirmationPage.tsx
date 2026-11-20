@@ -3,45 +3,11 @@ import { ROUTES } from '../shared/config/routes';
 import { formatPrice } from '../shared/lib/formatPrice';
 import { Icon } from '../shared/ui/Icon';
 import { PageTitle } from '../shared/ui/PageTitle';
-import './confirmation/ConfirmationPage.css';
-import { MOCK_TRIP_DETAILS } from './order/mock';
-import { TripDetails } from './order/TripDetails';
-import { MOCK_ROUTES } from './trains/mock';
-import { TrainCard } from './trains/TrainCard';
-
-/** Пассажиры с макета проверки. Настоящие — из формы пассажиров на этапах 3–4 */
-const PASSENGERS = [
-  {
-    id: 'irina',
-    type: 'Взрослый',
-    name: 'Мартынюк Ирина Эдуардовна',
-    info: [
-      ['Пол', 'женский'],
-      ['Дата рождения', '17.02.1985'],
-      ['Паспорт РФ', '4204 380694'],
-    ],
-  },
-  {
-    id: 'kirill',
-    type: 'Детский',
-    name: 'Мартынюк Кирилл Сергеевич',
-    info: [
-      ['Пол', 'мужской'],
-      ['Дата рождения', '25.01.2006'],
-      ['Свидетельство о рождении', 'VIII УН 256319'],
-    ],
-  },
-  {
-    id: 'sergey',
-    type: 'Взрослый',
-    name: 'Мартынюк Сергей Петрович',
-    info: [
-      ['Пол', 'мужской'],
-      ['Дата рождения', '19.06.1982'],
-      ['Паспорт РФ', '4204 380694'],
-    ],
-  },
-];
+import './ConfirmationPage.css';
+import { MOCK_CONFIRM_PASSENGERS, MOCK_TRIP_DETAILS } from '../mocks/order';
+import { TripDetails } from '../features/trip-details/TripDetails';
+import { MOCK_ROUTES } from '../mocks/trains';
+import { TrainCard } from '../entities/train/TrainCard';
 
 const [ROUTE] = MOCK_ROUTES;
 
@@ -76,7 +42,7 @@ export function ConfirmationPage() {
           </h2>
           <div className="confirm-card__body">
             <ul className="confirm-passengers">
-              {PASSENGERS.map(({ id, type, name, info }) => (
+              {MOCK_CONFIRM_PASSENGERS.map(({ id, type, name, info }) => (
                 <li key={id} className="confirm-passenger">
                   <span className="confirm-passenger__type">
                     <Icon className="confirm-passenger__icon" name="accountCircle" size={82} />

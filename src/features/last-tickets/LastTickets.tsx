@@ -1,7 +1,7 @@
 import { formatPrice } from '../../shared/lib/formatPrice';
 import { Amenities } from '../../shared/ui/Amenities';
 import { Icon } from '../../shared/ui/Icon';
-import type { LastTicket } from './types';
+import type { LastTicket } from '../../entities/train/types';
 import './LastTickets.css';
 
 export function LastTickets({ tickets }: { tickets: LastTicket[] }) {

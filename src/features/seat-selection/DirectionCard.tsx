@@ -4,7 +4,7 @@ import { ROUTES } from '../../shared/config/routes';
 import { formatPrice } from '../../shared/lib/formatPrice';
 import { Icon } from '../../shared/ui/Icon';
 import type { IconName } from '../../shared/ui/icons';
-import type { SeatClass, TripLeg } from '../trains/types';
+import type { SeatClass, TripLeg } from '../../entities/train/types';
 import {
   countByTier,
   totalPrice,
@@ -12,8 +12,8 @@ import {
   type CoachSet,
   type ServiceId,
   type ServiceState,
-} from './coach';
-import { CoachScheme } from './CoachScheme';
+} from '../../entities/coach/coach';
+import { CoachScheme } from '../../entities/coach/CoachScheme';
 import './DirectionCard.css';
 
 export interface PassengerCounts {
