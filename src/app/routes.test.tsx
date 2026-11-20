@@ -16,7 +16,19 @@ describe('маршруты', () => {
     await user.click(selectSeats);
     expect(heading('Выбор мест')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Далее' }));
+    // Места на все билеты в обе стороны: 3 туда (купе открыто), 2 обратно
+    const there = screen.getByRole('region', { name: 'Туда' });
+    for (const seat of [1, 3, 11]) {
+      await user.click(
+        within(there).getByRole('button', { name: `Место ${seat}, нижнее, свободно` }),
+      );
+    }
+    const back = screen.getByRole('region', { name: 'Обратно' });
+    await user.click(within(back).getByRole('button', { name: 'Сидячий' }));
+    for (const seat of [1, 2]) {
+      await user.click(within(back).getByRole('button', { name: `Место ${seat}, свободно` }));
+    }
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
     expect(heading('Пассажиры')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Далее' }));

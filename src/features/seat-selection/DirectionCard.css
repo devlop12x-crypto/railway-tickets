@@ -179,7 +179,7 @@
   box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
 }
 
-.tickets__group_state_focused {
+.tickets__group:focus-within {
   border-color: rgb(255 168 0 / 79%);
 }
 
@@ -411,9 +411,25 @@
   place-content: center;
   width: 36px;
   height: 34px;
+  padding: 0;
   color: var(--color-dark);
+  background: none;
   border: 1px solid var(--color-dark);
   border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.coach__service:hover {
+  border-color: var(--color-accent);
+}
+
+.coach__service:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.coach__service:disabled {
+  cursor: default;
 }
 
 /* Состояния по «экспликации»: не выбрано, выбрано, включено в стоимость */
@@ -427,6 +443,11 @@
   color: var(--color-gray);
   background: #fcdc9d;
   border-color: transparent;
+}
+
+/* Услуги нет в вагоне — значок приглушён, нажать нельзя */
+.coach__service_state_none {
+  opacity: 0.3;
 }
 
 .coach__watching {
@@ -446,6 +467,18 @@
   padding-left: 20px;
   /* На узких экранах схема (921px, как в макете) прокручивается внутри карточки */
   overflow-x: auto;
+}
+
+/* Сколько мест выбрано; при попытке выбрать лишнее — предупреждение */
+.direction__status {
+  margin: 24px 38px 24px 20px;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-gray);
+}
+
+.direction__status_warning {
+  color: var(--color-error);
 }
 
 /* Несколько вагонов: блоки разделены пунктиром */

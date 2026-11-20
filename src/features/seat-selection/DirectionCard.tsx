@@ -2,25 +2,33 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { ROUTES } from '../../shared/config/routes';
 import { formatPrice } from '../../shared/lib/formatPrice';
+import { plural } from '../../shared/lib/plural';
 import { Icon } from '../../shared/ui/Icon';
 import type { IconName } from '../../shared/ui/icons';
 import type { SeatClass, TripLeg } from '../../entities/train/types';
 import {
   countByTier,
-  totalPrice,
+  isSeatOnSale,
   type CoachDetails,
   type CoachSet,
   type ServiceId,
   type ServiceState,
 } from '../../entities/coach/coach';
 import { CoachScheme } from '../../entities/coach/CoachScheme';
+import {
+  changeCoachType,
+  changeCounts,
+  coachTotal,
+  countLimits,
+  MAX_TICKETS,
+  seatsNeeded,
+  toggleCoach,
+  toggleSeat,
+  toggleService,
+  type DirectionSelection,
+  type TicketCounts,
+} from './model';
 import './DirectionCard.css';
-
-export interface PassengerCounts {
-  adults: number;
-  children: number;
-  infants: number;
-}
 
 interface DirectionCardProps {
   direction: 'there' | 'back';
@@ -30,11 +38,10 @@ interface DirectionCardProps {
   toCity: string;
   leg: TripLeg;
   durationText: string;
-  passengers: PassengerCounts;
-  /** Тип вагона, выбранный изначально */
-  coachType?: SeatClass;
-  /** Вагоны по типам: что показать после выбора типа */
-  coachesByType: Partial<Record<SeatClass, CoachSet>>;
+  /** Все вагоны поезда по типам */
+  coachesByType: Readonly<Record<SeatClass, CoachSet>>;
+  value: DirectionSelection;
+  onChange: (next: DirectionSelection) => void;
 }
 
 const COACH_TYPES: { type: SeatClass; label: string; icon: IconName; size: number }[] = [
@@ -51,15 +58,23 @@ const SERVICES: { id: ServiceId; icon: IconName; label: string }[] = [
   { id: 'food', icon: 'cup', label: 'Питание' },
 ];
 
-const SERVICE_STATE_LABELS: Record<ServiceState, string> = {
-  off: 'не выбрано',
-  on: 'выбрано',
-  included: 'включено в стоимость',
-};
+interface CoachProps {
+  type: SeatClass;
+  coach: CoachDetails;
+  selection: DirectionSelection;
+  total: number;
+  onSeat: (seat: number) => void;
+  onService: (service: ServiceId) => void;
+}
 
-/** Сведения о вагоне, схема и сумма за выбранные места */
-function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
-  const counts = countByTier(type, coach.available);
+/** Сведения о вагоне, услуги, схема и сумма за выбранные в нём места */
+function Coach({ type, coach, selection, total, onSeat, onService }: CoachProps) {
+  const onSale = [...coach.available].filter((seat) => isSeatOnSale(type, coach, seat));
+  const counts = countByTier(type, onSale);
+  const chosenServices = selection.services[coach.number] ?? [];
+  const selected = new Set(
+    selection.seats.filter((ref) => ref.coach === coach.number).map(({ seat }) => seat),
+  );
   // Строки «ярус — свободно — цена»; у люкса и сидячего ярусов нет, только общая цена
   const tiers: { label: string; count: number; price: number | undefined }[] =
     type === 'second' || type === 'third'
@@ -72,7 +87,6 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
     tiers.push({ label: 'Боковые', count: counts.side, price: coach.prices.side });
   }
   const prices = tiers.length > 0 ? tiers.map(({ price }) => price) : [coach.prices.single];
-  const total = coach.selected ? totalPrice(type, coach.prices, coach.selected) : 0;
 
   return (
     <div className="coach-block">
@@ -83,7 +97,7 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
         </div>
         <div className="coach__column">
           <p className="coach__caption">
-            Места <b className="coach__caption-value">{coach.available.size}</b>
+            Места <b className="coach__caption-value">{onSale.length}</b>
           </p>
           {tiers.map(({ label, count }) => (
             <p key={label} className="coach__row">
@@ -95,8 +109,14 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
           <p className="coach__caption">Стоимость</p>
           {prices.map((price, index) => (
             <p key={index} className="coach__row coach__price">
-              <b>{formatPrice(price ?? 0)}</b>
-              <Icon className="coach__ruble" name="ruble" size={20} />
+              {price === undefined ? (
+                <b>нет в продаже</b>
+              ) : (
+                <>
+                  <b>{formatPrice(price)}</b>
+                  <Icon className="coach__ruble" name="ruble" size={20} />
+                </>
+              )}
             </p>
           ))}
         </div>
@@ -106,18 +126,29 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
           </p>
           <ul className="coach__services">
             {SERVICES.map(({ id: serviceId, icon, label }) => {
-              const state = coach.services[serviceId];
+              const offer = coach.services[serviceId];
+              const isOn = chosenServices.includes(serviceId);
+              const state: ServiceState = typeof offer === 'number' ? (isOn ? 'on' : 'off') : offer;
+              const description =
+                offer === 'included'
+                  ? 'включено в стоимость'
+                  : offer === 'none'
+                    ? 'нет в вагоне'
+                    : `${formatPrice(offer)} ₽ за пассажира`;
 
               return (
-                <li
-                  key={serviceId}
-                  className={`coach__service coach__service_state_${state}`}
-                  title={label}
-                >
-                  <Icon name={icon} size={22} />
-                  <span className="visually-hidden">
-                    {label}: {SERVICE_STATE_LABELS[state]}
-                  </span>
+                <li key={serviceId}>
+                  <button
+                    className={`coach__service coach__service_state_${state}`}
+                    type="button"
+                    title={`${label}: ${description}`}
+                    aria-label={`${label}: ${description}`}
+                    aria-pressed={typeof offer === 'number' ? isOn : undefined}
+                    disabled={typeof offer !== 'number'}
+                    onClick={() => onService(serviceId)}
+                  >
+                    <Icon name={icon} size={22} />
+                  </button>
                 </li>
               );
             })}
@@ -127,17 +158,12 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
       </div>
 
       <div className="direction__scheme">
-        <CoachScheme
-          type={type}
-          coachNumber={coach.number}
-          available={coach.available}
-          selected={coach.selected}
-        />
+        <CoachScheme type={type} coach={coach} selected={selected} onToggle={onSeat} />
       </div>
 
       {total > 0 && (
         <p className="coach-block__total">
-          <span className="visually-hidden">Итого: </span>
+          <span className="visually-hidden">Итого по вагону {coach.number}: </span>
           <b>{formatPrice(total)}</b>
           <Icon className="coach__ruble" name="ruble" size={20} />
         </p>
@@ -146,17 +172,30 @@ function Coach({ type, coach }: { type: SeatClass; coach: CoachDetails }) {
   );
 }
 
-const MAX_PASSENGERS = 5;
+interface CountSelectProps {
+  id: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}
 
-function CountSelect({ id, label, value }: { id: string; label: string; value: number }) {
+/** Список количества: все значения видны, недоступные при текущем заказе — выключены */
+function CountSelect({ id, label, value, min, max, onChange }: CountSelectProps) {
   return (
     <>
       <label className="visually-hidden" htmlFor={id}>
         {label}
       </label>
-      <select className="tickets__select" id={id} defaultValue={value}>
-        {Array.from({ length: MAX_PASSENGERS + 1 }, (_, count) => (
-          <option key={count} value={count}>
+      <select
+        className="tickets__select"
+        id={id}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      >
+        {Array.from({ length: MAX_TICKETS + 1 }, (_, count) => (
+          <option key={count} value={count} disabled={count < min || count > max}>
             {label} — {count}
           </option>
         ))}
@@ -165,16 +204,26 @@ function CountSelect({ id, label, value }: { id: string; label: string; value: n
   );
 }
 
-/** Выбор мест в одном направлении: поезд, количество билетов, тип вагона, схема */
+/** Выбор мест в одном направлении: поезд, количество билетов, тип вагона, схемы */
 export function DirectionCard(props: DirectionCardProps) {
-  const { direction, trainNumber, origin, fromCity, toCity, leg, durationText, passengers } = props;
-  const { coachesByType } = props;
+  const { direction, trainNumber, origin, fromCity, toCity, leg, durationText } = props;
+  const { coachesByType, value, onChange } = props;
   const id = useId();
-  // Этап 2: переключение типа вагона показывает его схему; данные — с макета
-  const [coachType, setCoachType] = useState(props.coachType);
-  const coachSet = coachType ? coachesByType[coachType] : undefined;
-  const shownNumbers = new Set(coachSet?.coaches.map(({ number }) => number));
+  // Подсказка про лимит живёт только в карточке: родителю она не нужна
+  const [limitHit, setLimitHit] = useState(false);
+  const { counts, coachType } = value;
+  const coaches = coachType ? coachesByType[coachType] : undefined;
+  const limits = countLimits(counts);
+  const needed = seatsNeeded(counts);
+  const left = MAX_TICKETS - needed;
   const title = direction === 'there' ? 'Туда' : 'Обратно';
+
+  const update = (next: DirectionSelection) => {
+    setLimitHit(false);
+    onChange(next);
+  };
+  const setCount = (key: keyof TicketCounts) => (count: number) =>
+    update(changeCounts(value, { ...counts, [key]: count }));
 
   return (
     <section className={`direction direction_${direction}`} aria-labelledby={`${id}-title`}>
@@ -234,28 +283,51 @@ export function DirectionCard(props: DirectionCardProps) {
       <h3 className="direction__title">Количество билетов</h3>
       <div className="tickets">
         <div className="tickets__group tickets__group_state_filled">
-          <CountSelect id={`${id}-adults`} label="Взрослых" value={passengers.adults} />
+          <CountSelect
+            id={`${id}-adults`}
+            label="Взрослых"
+            value={counts.adults}
+            min={1}
+            max={limits.adults}
+            onChange={setCount('adults')}
+          />
           <p className="tickets__hint tickets__hint_strong">
-            Можно добавить еще {MAX_PASSENGERS - passengers.adults} пассажиров
+            {left > 0
+              ? `Можно добавить еще ${left} ${plural(left, ['пассажира', 'пассажира', 'пассажиров'])}`
+              : `В одном заказе не больше ${MAX_TICKETS} билетов с местом`}
           </p>
         </div>
         <div
-          className={`tickets__group${passengers.children > 0 ? ' tickets__group_state_focused' : ''}`}
+          className={`tickets__group${counts.children > 0 ? ' tickets__group_state_filled' : ''}`}
         >
-          <CountSelect id={`${id}-children`} label="Детских" value={passengers.children} />
-          {passengers.children > 0 && (
-            <p className="tickets__hint">
-              Можно добавить еще 3 детей до 10 лет.Свое место в вагоне, как у взрослых, но дешевле в
-              среднем на 50-65%
-            </p>
-          )}
+          <CountSelect
+            id={`${id}-children`}
+            label="Детских"
+            value={counts.children}
+            min={0}
+            max={limits.children}
+            onChange={setCount('children')}
+          />
+          <p className="tickets__hint">
+            {left > 0 &&
+              `Можно добавить еще ${left} ${plural(left, ['ребенка', 'детей', 'детей'])} до 10 лет. `}
+            Свое место в вагоне, как у взрослых, но дешевле в среднем на 50-65%
+          </p>
         </div>
-        <div className="tickets__group">
+        <div
+          className={`tickets__group${counts.infants > 0 ? ' tickets__group_state_filled' : ''}`}
+        >
           <CountSelect
             id={`${id}-infants`}
             label="Детских «без места»"
-            value={passengers.infants}
+            value={counts.infants}
+            min={0}
+            max={limits.infants}
+            onChange={setCount('infants')}
           />
+          <p className="tickets__hint">
+            Дети до 5 лет едут вместе со взрослым — не больше одного на каждого взрослого
+          </p>
         </div>
       </div>
 
@@ -270,7 +342,7 @@ export function DirectionCard(props: DirectionCardProps) {
               className={`coach-types__item coach-types__item_state_${state}`}
               type="button"
               aria-pressed={type === coachType}
-              onClick={() => setCoachType(type)}
+              onClick={() => update(changeCoachType(value, type, coachesByType[type]))}
             >
               <span className="coach-types__icon">
                 <Icon name={icon} size={size} />
@@ -281,28 +353,63 @@ export function DirectionCard(props: DirectionCardProps) {
         })}
       </div>
 
-      {coachType && coachSet && (
+      {coachType && coaches && (
         <>
           <div className="coaches-bar">
-            <span className="coaches-bar__list">
+            <span className="coaches-bar__list" role="group" aria-label="Вагоны">
               Вагоны
-              {coachSet.coachNumbers.map((number) => (
-                <button
-                  key={number}
-                  className={`coaches-bar__number${shownNumbers.has(number) ? ' coaches-bar__number_current' : ''}`}
-                  type="button"
-                  aria-pressed={shownNumbers.has(number)}
-                >
-                  {number}
-                </button>
-              ))}
+              {coaches
+                .map(({ number }) => number)
+                .sort()
+                .map((number) => {
+                  const isShown = value.shown.includes(number);
+
+                  return (
+                    <button
+                      key={number}
+                      className={`coaches-bar__number${isShown ? ' coaches-bar__number_current' : ''}`}
+                      type="button"
+                      aria-label={`Вагон ${number}`}
+                      aria-pressed={isShown}
+                      onClick={() => update(toggleCoach(value, number))}
+                    >
+                      {number}
+                    </button>
+                  );
+                })}
             </span>
             <span className="coaches-bar__note">Нумерация вагонов начинается с головы поезда</span>
           </div>
 
-          {coachSet.coaches.map((coach) => (
-            <Coach key={coach.number} type={coachType} coach={coach} />
-          ))}
+          <p
+            className={`direction__status${limitHit ? ' direction__status_warning' : ''}`}
+            role="status"
+          >
+            Выбрано {value.seats.length} из {needed} {plural(needed, ['места', 'мест', 'мест'])}.
+            {limitHit &&
+              ' Места на все билеты уже выбраны: снимите отметку с другого места или добавьте билет.'}
+          </p>
+
+          {value.shown.map((number) => {
+            const coach = coaches.find((item) => item.number === number);
+            if (!coach) return null;
+
+            return (
+              <Coach
+                key={number}
+                type={coachType}
+                coach={coach}
+                selection={value}
+                total={coachTotal(value, coaches, number)}
+                onSeat={(seat) => {
+                  const result = toggleSeat(value, { coach: number, seat });
+                  if (result.ok) update(result.state);
+                  else setLimitHit(true);
+                }}
+                onService={(service) => update(toggleService(value, number, service))}
+              />
+            );
+          })}
         </>
       )}
     </section>

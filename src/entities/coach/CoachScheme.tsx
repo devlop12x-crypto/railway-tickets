@@ -1,14 +1,14 @@
 import type { CSSProperties } from 'react';
 import { Icon } from '../../shared/ui/Icon';
 import type { SeatClass } from '../train/types';
-import { seatTier } from './coach';
+import { isSeatOnSale, seatTier, type CoachDetails } from './coach';
 import './CoachScheme.css';
 
 interface CoachSchemeProps {
   type: SeatClass;
-  coachNumber: string;
-  available: ReadonlySet<number>;
-  selected?: ReadonlySet<number> | undefined;
+  coach: CoachDetails;
+  selected: ReadonlySet<number>;
+  onToggle: (seat: number) => void;
 }
 
 const COMPARTMENTS = 8;
@@ -17,14 +17,15 @@ const TIER_LABELS = { upper: 'верхнее', lower: 'нижнее', side: 'б�
 interface SeatProps {
   type: SeatClass;
   number: number;
-  available: ReadonlySet<number>;
-  selected?: ReadonlySet<number> | undefined;
+  coach: CoachDetails;
+  selected: ReadonlySet<number>;
+  onToggle: (seat: number) => void;
   style?: CSSProperties;
 }
 
-function Seat({ type, number, available, selected, style }: SeatProps) {
-  const isFree = available.has(number);
-  const isSelected = selected?.has(number) ?? false;
+function Seat({ type, number, coach, selected, onToggle, style }: SeatProps) {
+  const isFree = isSeatOnSale(type, coach, number);
+  const isSelected = selected.has(number);
   const tier = TIER_LABELS[seatTier(type, number)];
   const status = isSelected ? 'выбрано' : isFree ? 'свободно' : 'занято';
   const state = isSelected
@@ -41,6 +42,7 @@ function Seat({ type, number, available, selected, style }: SeatProps) {
       disabled={!isFree && !isSelected}
       aria-pressed={isSelected}
       aria-label={`Место ${number}${tier ? `, ${tier}` : ''}, ${status}`}
+      onClick={() => onToggle(number)}
     >
       {number}
     </button>
@@ -130,14 +132,14 @@ function SeatedHall(props: SeatsProps) {
 
 /**
  * Схема вагона по типу: купе, плацкарт, люкс или сидячий.
- * Этап 2 — вёрстка; выбор мест подключится на этапе 3, данные о местах — на этапе 4.
+ * Сама ничего не решает: сообщает о клике по месту, а можно ли его выбрать — решает владелец.
  */
-export function CoachScheme({ type, coachNumber, available, selected }: CoachSchemeProps) {
-  const seatsProps = { type, available, selected };
+export function CoachScheme({ type, coach, selected, onToggle }: CoachSchemeProps) {
+  const seatsProps = { type, coach, selected, onToggle };
 
   return (
-    <div className="coach-scheme" role="group" aria-label={`Схема вагона ${coachNumber}`}>
-      <span className="coach-scheme__number">{coachNumber}</span>
+    <div className="coach-scheme" role="group" aria-label={`Схема вагона ${coach.number}`}>
+      <span className="coach-scheme__number">{coach.number}</span>
       <div className="coach-scheme__body">
         <div className="coach-scheme__end coach-scheme__end_start" aria-hidden="true">
           <Icon className="coach-scheme__wc" name="wc" size={22} />
