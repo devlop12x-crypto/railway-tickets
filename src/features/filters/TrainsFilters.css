@@ -19,29 +19,8 @@
   padding: 43px 36px 33px 29px;
 }
 
-.filters__date-control {
-  position: relative;
+.filters__date .date-input {
   margin-top: 11px;
-}
-
-.filters__date-input {
-  width: 100%;
-  height: 43px;
-  padding: 0 40px 0 8px;
-  font-size: 18px;
-  color: var(--color-dark);
-  background: var(--color-white);
-  border: 0;
-  border-radius: 3px;
-}
-
-.filters__date-icon {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  color: var(--color-gray-light);
-  transform: translateY(-50%);
-  pointer-events: none;
 }
 
 /* Классы вагонов и опции */
@@ -128,60 +107,11 @@
   padding: 37px 34px 30px 32px;
 }
 
-.filters__price-limits,
-.filters__price-scale {
-  position: relative;
+.filters__price-limits {
   display: flex;
   justify-content: space-between;
-}
-
-.filters__price-limits {
-  margin-top: 6px;
+  margin: 6px 0 6px;
   font-size: 18px;
-}
-
-.price-range {
-  position: relative;
-  height: 19px;
-  margin-top: 6px;
-  border: 1px solid #c4c4c4;
-  border-radius: 8px;
-}
-
-.price-range__fill {
-  position: absolute;
-  inset: -1px auto -1px -1px;
-  width: 129px;
-  background: var(--color-accent);
-  border-radius: 8px;
-}
-
-.price-range__thumb {
-  position: absolute;
-  top: -3px;
-  width: 24px;
-  height: 24px;
-  background: var(--color-white);
-  border-radius: 50%;
-}
-
-.price-range__thumb_min {
-  left: -3px;
-}
-
-.price-range__thumb_max {
-  left: 110px;
-}
-
-.filters__price-scale {
-  margin-top: 8px;
-  font-size: 16px;
-  color: var(--color-gray-light);
-}
-
-.filters__price-current {
-  position: absolute;
-  left: 106px;
 }
 
 /* Туда / Обратно */
@@ -254,57 +184,21 @@
   margin-top: -14px;
 }
 
-.time-range__label {
+.filters__time-label {
   display: block;
+  margin-bottom: 15px;
   font-size: 24px;
   line-height: 28px;
   color: var(--color-gray-light);
 }
 
-.time-range_align_end .time-range__label {
+.filters__time_align_end .filters__time-label {
   text-align: right;
 }
 
-.time-range__track {
-  position: relative;
-  height: 10px;
-  margin-top: 15px;
-  border: 1px solid #c4c4c4;
-  border-radius: 8px;
-}
-
-.time-range__fill {
-  position: absolute;
-  top: -1px;
-  bottom: -1px;
-  background: var(--color-accent);
-  border-radius: 8px;
-}
-
-.time-range__thumb {
-  position: absolute;
-  top: -5px;
-  width: 18px;
-  height: 18px;
-  margin-left: -1px;
-  background: var(--color-white);
-  border-radius: 50%;
-}
-
-.time-range__scale {
-  position: relative;
-  height: 23px;
-  margin-top: 11px;
-  font-size: 16px;
-  line-height: 19px;
-  color: var(--color-gray-light);
-}
-
-.time-range__scale span {
-  position: absolute;
-}
-
-.time-range__scale .time-range__max {
-  right: 0;
-  left: auto;
+.filters__error {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--color-error-bg);
 }

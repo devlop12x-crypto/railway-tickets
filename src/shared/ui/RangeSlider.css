@@ -1,0 +1,120 @@
+/* Размеры бегунков и дорожек — из макета фильтров */
+.range_size_price {
+  --track: 19px;
+  --thumb: 24px;
+}
+
+.range_size_time {
+  --track: 10px;
+  --thumb: 18px;
+}
+
+.range__track {
+  position: relative;
+  height: var(--track);
+  border: 1px solid #c4c4c4;
+  border-radius: 8px;
+}
+
+.range__fill {
+  position: absolute;
+  inset: -1px auto -1px var(--from);
+  width: calc(var(--to) - var(--from));
+  background: var(--color-accent);
+  border-radius: 8px;
+}
+
+/*
+ * Оба input лежат поверх дорожки; сами они прозрачны для мыши, ловятся только бегунки.
+ * Ширина больше дорожки на бегунок, чтобы центр бегунка совпадал с краем.
+ */
+.range__input {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--thumb) / -2);
+  width: calc(100% + var(--thumb));
+  height: var(--thumb);
+  margin: 0;
+  background: none;
+  transform: translateY(-50%);
+  pointer-events: none;
+  appearance: none;
+}
+
+.range__input::-webkit-slider-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  background: var(--color-white);
+  border: 0;
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+  appearance: none;
+}
+
+.range__input::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  background: var(--color-white);
+  border: 0;
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.range__input:hover::-webkit-slider-thumb {
+  background: var(--color-accent-light);
+}
+
+.range__input:active::-webkit-slider-thumb {
+  background: var(--color-accent);
+  cursor: grabbing;
+}
+
+.range__input:hover::-moz-range-thumb {
+  background: var(--color-accent-light);
+}
+
+.range__input:active::-moz-range-thumb {
+  background: var(--color-accent);
+}
+
+.range__input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.range__input:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.range__scale {
+  position: relative;
+  height: 19px;
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-gray-light);
+}
+
+.range__value,
+.range__max {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.range__value_from {
+  left: var(--from);
+  transform: translateX(calc(var(--from) * -1));
+}
+
+.range__value_to {
+  left: var(--to);
+  transform: translateX(calc(var(--to) * -1));
+}
+
+.range__max {
+  right: 0;
+}

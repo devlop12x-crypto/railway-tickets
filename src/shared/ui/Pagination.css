@@ -23,14 +23,29 @@
     border-color 0.15s;
 }
 
-.pagination__item:hover {
+.pagination__item:not(:disabled):hover {
   color: var(--color-accent);
   border-color: var(--color-accent);
 }
 
-.pagination__item:active,
+.pagination__item:not(:disabled, .pagination__gap):active,
 .pagination__item_current {
   color: var(--color-white);
   background: var(--color-accent);
   border-color: var(--color-accent);
+}
+
+.pagination__item:disabled {
+  color: #e5e5e5;
+  border-color: #e5e5e5;
+  cursor: default;
+}
+
+.pagination__gap {
+  cursor: default;
+}
+
+.pagination__gap:hover {
+  color: var(--color-gray);
+  border-color: #c4c4c4;
 }

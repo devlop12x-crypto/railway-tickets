@@ -13,6 +13,11 @@
   --color-page: #f7f5f9;
   --color-panel: #f4f3f6;
   --color-text-strong: #3e3c41;
+  /* Ошибки и подтверждения: плашки формы пассажира и всплывающие окна */
+  --color-error: #ff3d00;
+  --color-error-bg: #ffb59e;
+  --color-success-bg: #b2f6a1;
+  --color-info-bg: #fcf9a1;
   --color-quote: #928f94;
   --color-white: #fff;
 

@@ -1,9 +1,6 @@
-import type { LastTicket, TrainRoute, TripLeg } from './types';
+import type { LastTicket, TrainRoute, TripLeg } from '../entities/train/types';
 
 /** Данные с макета: до подключения API (этап 4) страница показывает их */
-
-/** Сколько направлений «найдено» на макете */
-export const MOCK_TOTAL_COUNT = 20;
 
 const MSK_SPB: TripLeg = {
   from: { time: '00:10', city: 'Москва', station: 'Курский вокзал' },
@@ -34,7 +31,8 @@ const route116 = (id: string): TrainRoute => ({
   amenities: ALL_AMENITIES,
 });
 
-export const MOCK_ROUTES: TrainRoute[] = [
+/** Первые пять — как на макете */
+const DESIGN_ROUTES: TrainRoute[] = [
   route116('116-1'),
   {
     id: '020',
@@ -76,6 +74,39 @@ export const MOCK_ROUTES: TrainRoute[] = [
   route116('116-2'),
   route116('116-3'),
 ];
+
+const pad = (value: number) => String(value).padStart(2, '0');
+const at = (minutes: number) => `${pad(Math.floor(minutes / 60) % 24)}:${pad(minutes % 60)}`;
+
+/**
+ * Ещё 15 вариантов для пагинации и сортировки («найдено 20» на макете):
+ * детерминированно сдвигаем время, длительность, цены, классы и удобства.
+ */
+const VARIANTS: TrainRoute[] = Array.from({ length: 15 }, (_, index) => {
+  const base = DESIGN_ROUTES[index % DESIGN_ROUTES.length] as TrainRoute;
+  const departure = (index * 97 + 60) % (24 * 60);
+  const travel = 7 * 60 + ((index * 41) % 240);
+  const leg = (from: number): TripLeg => ({
+    from: { ...base.there.from, time: at(from) },
+    to: { ...base.there.to, time: at(from + travel) },
+    duration: `${Math.floor(travel / 60)} : ${pad(travel % 60)}`,
+  });
+  const shift = ((index % 5) - 2) * 230;
+
+  return {
+    ...base,
+    id: `variant-${index}`,
+    trainNumber: `${100 + index * 7}${['А', 'М', 'Н', 'С', 'У'][index % 5]}`,
+    there: leg(departure),
+    ...(base.back ? { back: leg((departure + 12 * 60) % (24 * 60)) } : {}),
+    seats: base.seats
+      .filter((_seat, seatIndex) => (index + seatIndex) % 4 !== 3)
+      .map((seat) => ({ ...seat, minPrice: seat.minPrice + shift })),
+    amenities: { wifi: index % 3 !== 0, express: index % 4 === 1, food: index % 2 === 0 },
+  };
+});
+
+export const MOCK_ROUTES: TrainRoute[] = [...DESIGN_ROUTES, ...VARIANTS];
 
 export const MOCK_LAST_TICKETS: LastTicket[] = [
   {

@@ -2,9 +2,9 @@ import { useId } from 'react';
 import { Link } from 'react-router';
 import { ROUTES } from '../shared/config/routes';
 import { PageTitle } from '../shared/ui/PageTitle';
-import { MOCK_TRIP_DETAILS } from './order/mock';
-import { TripDetails } from './order/TripDetails';
-import './payment/PaymentPage.css';
+import { MOCK_TRIP_DETAILS } from '../mocks/order';
+import { TripDetails } from '../features/trip-details/TripDetails';
+import './PaymentPage.css';
 
 const PERSON = [
   ['lastName', 'Фамилия', 'Мартынюк'],

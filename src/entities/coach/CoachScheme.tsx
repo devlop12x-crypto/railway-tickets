@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Icon } from '../../shared/ui/Icon';
-import type { SeatClass } from '../trains/types';
+import type { SeatClass } from '../train/types';
 import { seatTier } from './coach';
 import './CoachScheme.css';
 

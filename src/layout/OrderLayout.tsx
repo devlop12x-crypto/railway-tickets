@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { SearchForm } from '../features/search/SearchForm';
+import { OrderHero } from './OrderHero';
 import { OrderSteps } from './OrderSteps';
 import { useOrderStep } from './useOrderStep';
 import './OrderLayout.css';
@@ -10,11 +10,7 @@ export function OrderLayout() {
 
   return (
     <>
-      <section className="page-hero order-hero" aria-label="Поиск билетов">
-        <div className="container">
-          <SearchForm variant="compact" />
-        </div>
-      </section>
+      <OrderHero />
       {step && <OrderSteps current={step} />}
       <main className="order-page">
         <div className="container order-page__grid">

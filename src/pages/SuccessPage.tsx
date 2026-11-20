@@ -6,7 +6,7 @@ import { ROUTES } from '../shared/config/routes';
 import { formatPrice } from '../shared/lib/formatPrice';
 import { Icon } from '../shared/ui/Icon';
 import { PageTitle } from '../shared/ui/PageTitle';
-import { MOCK_TRIP_DETAILS } from './order/mock';
+import { MOCK_TRIP_DETAILS } from '../mocks/order';
 import './SuccessPage.css';
 
 /** Шаги после покупки. Акцентная часть подписи выделена жирным, как в макете */

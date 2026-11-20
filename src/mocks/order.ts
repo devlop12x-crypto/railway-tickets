@@ -1,4 +1,4 @@
-import type { TripDetailsData } from './TripDetails';
+import type { TripDetailsData } from '../features/trip-details/TripDetails';
 
 /** Детали поездки с макетов пассажиров и оплаты. Настоящие — из заказа на этапе 4 */
 export const MOCK_TRIP_DETAILS: TripDetailsData = {
@@ -24,3 +24,37 @@ export const MOCK_TRIP_DETAILS: TripDetailsData = {
   ],
   total: 7760,
 };
+
+/** Пассажиры с макета проверки. Настоящие — из формы пассажиров на этапах 3–4 */
+export const MOCK_CONFIRM_PASSENGERS = [
+  {
+    id: 'irina',
+    type: 'Взрослый',
+    name: 'Мартынюк Ирина Эдуардовна',
+    info: [
+      ['Пол', 'женский'],
+      ['Дата рождения', '17.02.1985'],
+      ['Паспорт РФ', '4204 380694'],
+    ],
+  },
+  {
+    id: 'kirill',
+    type: 'Детский',
+    name: 'Мартынюк Кирилл Сергеевич',
+    info: [
+      ['Пол', 'мужской'],
+      ['Дата рождения', '25.01.2006'],
+      ['Свидетельство о рождении', 'VIII УН 256319'],
+    ],
+  },
+  {
+    id: 'sergey',
+    type: 'Взрослый',
+    name: 'Мартынюк Сергей Петрович',
+    info: [
+      ['Пол', 'мужской'],
+      ['Дата рождения', '19.06.1982'],
+      ['Паспорт РФ', '4204 380694'],
+    ],
+  },
+];

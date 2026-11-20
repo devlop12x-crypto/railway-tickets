@@ -6,10 +6,9 @@ import { renderRoute } from '../test/renderRoute';
 const heading = (name: string) => screen.getByRole('heading', { level: 1, name });
 
 describe('маршруты', () => {
-  it('проходит весь заказ от главной до благодарности', async () => {
-    const { user, router } = renderRoute(ROUTES.home);
-
-    await user.click(screen.getByRole('button', { name: 'Найти билеты' }));
+  // Поиск с главной проверяет SearchForm.test.tsx; здесь — переходы по шагам заказа
+  it('проходит весь заказ от выбора поезда до благодарности', async () => {
+    const { user, router } = renderRoute(ROUTES.trains);
     expect(heading('Выбор поезда')).toBeInTheDocument();
 
     const [selectSeats] = screen.getAllByRole('link', { name: 'Выбрать места' });

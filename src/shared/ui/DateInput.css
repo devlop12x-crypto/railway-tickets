@@ -1,0 +1,79 @@
+.date-input {
+  position: relative;
+}
+
+.date-input__field {
+  width: 100%;
+  padding: 0 60px 0 20px;
+  font-size: 18px;
+  color: var(--color-dark);
+  background: var(--color-white);
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.date-input_variant_search .date-input__field {
+  height: 60px;
+}
+
+.date-input_variant_filter .date-input__field {
+  height: 43px;
+  padding: 0 44px 0 8px;
+}
+
+.date-input__field:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.date-input__field::placeholder {
+  color: var(--color-gray-light);
+}
+
+.date-input__field[aria-invalid='true'] {
+  border-color: var(--color-error);
+  box-shadow: inset 0 0 0 1px var(--color-error);
+}
+
+.date-input__toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: grid;
+  padding: 0;
+  color: var(--color-gray-light);
+  background: none;
+  border: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.date-input_variant_filter .date-input__toggle {
+  right: 14px;
+}
+
+.date-input__toggle:hover {
+  color: var(--color-accent-light);
+}
+
+.date-input__toggle:active,
+.date-input__toggle[aria-expanded='true'] {
+  color: var(--color-accent);
+}
+
+/* Календарь под полем с треугольником-указателем */
+.date-input__popup {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: -10px;
+  z-index: 20;
+}
+
+.date-input__popup::before {
+  position: absolute;
+  top: -8px;
+  left: 42px;
+  content: '';
+  border-inline: 9px solid transparent;
+  border-bottom: 9px solid var(--color-white);
+}
