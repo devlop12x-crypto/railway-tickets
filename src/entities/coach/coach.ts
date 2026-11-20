@@ -2,8 +2,11 @@ import type { SeatClass } from '../train/types';
 
 /** Логика вагона без вёрстки: ярусы мест и цены. Пригодится и на этапах 3–4 */
 
-export type ServiceState = 'off' | 'on' | 'included';
 export type ServiceId = 'ac' | 'wifi' | 'linens' | 'food';
+/** Услуга в вагоне: цена за пассажира, «включено в стоимость» или её нет */
+export type ServiceOffer = number | 'included' | 'none';
+/** Состояние значка услуги по «экспликации» плюс «нет в вагоне» */
+export type ServiceState = 'off' | 'on' | 'included' | 'none';
 
 export interface CoachPrices {
   upper?: number;
@@ -17,17 +20,12 @@ export interface CoachDetails {
   number: string;
   prices: CoachPrices;
   available: ReadonlySet<number>;
-  selected?: ReadonlySet<number>;
   watching: number;
-  services: Record<ServiceId, ServiceState>;
+  services: Record<ServiceId, ServiceOffer>;
 }
 
-export interface CoachSet {
-  /** Все вагоны этого типа в поезде */
-  coachNumbers: string[];
-  /** Вагоны, показанные на схеме */
-  coaches: CoachDetails[];
-}
+/** Все вагоны одного типа в поезде, по порядку от головы */
+export type CoachSet = readonly CoachDetails[];
 
 export type SeatTier = 'upper' | 'lower' | 'side' | 'single';
 
@@ -38,9 +36,10 @@ export function seatTier(type: SeatClass, seat: number): SeatTier {
   return seat % 2 === 0 ? 'upper' : 'lower';
 }
 
-export function seatPrice(type: SeatClass, prices: CoachPrices, seat: number): number {
+/** Цена места по ярусу. Нет цены — место не продаётся, а не бесплатно */
+export function seatPrice(type: SeatClass, prices: CoachPrices, seat: number): number | undefined {
   const tier = seatTier(type, seat);
-  return (tier === 'single' ? prices.single : prices[tier]) ?? 0;
+  return tier === 'single' ? prices.single : prices[tier];
 }
 
 export function countByTier(type: SeatClass, seats: Iterable<number>): Record<SeatTier, number> {
@@ -51,6 +50,11 @@ export function countByTier(type: SeatClass, seats: Iterable<number>): Record<Se
 
 export function totalPrice(type: SeatClass, prices: CoachPrices, seats: Iterable<number>): number {
   let sum = 0;
-  for (const seat of seats) sum += seatPrice(type, prices, seat);
+  for (const seat of seats) sum += seatPrice(type, prices, seat) ?? 0;
   return sum;
+}
+
+/** Место можно выбрать, если оно свободно и у его яруса есть цена */
+export function isSeatOnSale(type: SeatClass, coach: CoachDetails, seat: number): boolean {
+  return coach.available.has(seat) && seatPrice(type, coach.prices, seat) !== undefined;
 }

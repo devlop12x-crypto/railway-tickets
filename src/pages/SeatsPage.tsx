@@ -1,21 +1,47 @@
-import { Link } from 'react-router';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { ROUTES } from '../shared/config/routes';
+import { plural } from '../shared/lib/plural';
 import { PageTitle } from '../shared/ui/PageTitle';
 import { DirectionCard } from '../features/seat-selection/DirectionCard';
+import {
+  createSelection,
+  isComplete,
+  seatsNeeded,
+  type DirectionSelection,
+} from '../features/seat-selection/model';
 import { COACHES_BY_TYPE, SEATS_TRAIN } from '../mocks/seats';
-import './SeatsPage.css';
 import { LastTickets } from '../features/last-tickets/LastTickets';
 import { MOCK_LAST_TICKETS, MOCK_ROUTES } from '../mocks/trains';
 import { useTrainFilters } from '../features/filters/useTrainFilters';
 import { TrainsFilters } from '../features/filters/TrainsFilters';
+import './SeatsPage.css';
+
+const SEATS_WORDS = ['место', 'места', 'мест'] as const;
+
+function missingText(label: string, state: DirectionSelection) {
+  const left = seatsNeeded(state.counts) - state.seats.length;
+  return `${label} — еще ${left} ${plural(left, SEATS_WORDS)}`;
+}
 
 /**
- * Выбор мест туда и обратно. По умолчанию — макет «выбор мест» (купе);
- * кнопки типа вагона показывают схемы плацкарта, люкса и сидячего вагона.
+ * Выбор мест туда и обратно. Количество билетов на макете — 2 взрослых и ребёнок туда,
+ * 2 взрослых обратно; купе «туда» открыто, как на макете «выбор мест».
+ * На этапе 4 выбор уйдёт в общее состояние заказа, а «Далее» передаст его пассажирам.
  */
 export function SeatsPage() {
   // На этапе 4 изменение фильтров здесь вернёт к выдаче поездов с новыми условиями
   const { filters, setFilters, bounds } = useTrainFilters(MOCK_ROUTES);
+  const navigate = useNavigate();
+  const [there, setThere] = useState(() =>
+    createSelection({ adults: 2, children: 1, infants: 0 }, 'second', COACHES_BY_TYPE.second),
+  );
+  const [back, setBack] = useState(() => createSelection({ adults: 2, children: 0, infants: 0 }));
+
+  const missing = [
+    !isComplete(there) && missingText('туда', there),
+    !isComplete(back) && missingText('обратно', back),
+  ].filter(Boolean);
 
   return (
     <>
@@ -37,20 +63,32 @@ export function SeatsPage() {
         <DirectionCard
           {...SEATS_TRAIN}
           direction="there"
-          passengers={{ adults: 2, children: 1, infants: 0 }}
-          coachType="second"
           coachesByType={COACHES_BY_TYPE}
+          value={there}
+          onChange={setThere}
         />
         <DirectionCard
           {...SEATS_TRAIN}
           direction="back"
-          passengers={{ adults: 2, children: 0, infants: 0 }}
           coachesByType={COACHES_BY_TYPE}
+          value={back}
+          onChange={setBack}
         />
         <div className="seats__next">
-          <Link className="button button_variant_primary seats__next-button" to={ROUTES.passengers}>
+          {missing.length > 0 && (
+            <p className="seats__hint" id="seats-missing">
+              Выберите места: {missing.join(', ')}
+            </p>
+          )}
+          <button
+            className="button button_variant_primary seats__next-button"
+            type="button"
+            disabled={missing.length > 0}
+            aria-describedby={missing.length > 0 ? 'seats-missing' : undefined}
+            onClick={() => void navigate(ROUTES.passengers)}
+          >
             Далее
-          </Link>
+          </button>
         </div>
       </section>
     </>
