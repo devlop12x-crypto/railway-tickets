@@ -1,0 +1,3275 @@
+diff --git a/README.md b/README.md
+index 4887702..f627caf 100644
+--- a/README.md
++++ b/README.md
+@@ -21,7 +21,12 @@ SPA на React для покупки ж/д билетов по макетам в
+ - [x] Этап 2.6. Схемы плацкарта, люкса и сидячего вагона, несколько вагонов, выбранные места и сумма
+ - [x] Этап 2.7. «Пассажиры» и «Оплата», боковая панель «Детали поездки»
+ - [x] Этап 2.8. Проверка заказа, экран загрузки с анимацией поезда
+-- [ ] Этап 3. Компоненты с валидацией форм
++- [x] Этап 3.0. Рефакторинг: слои `entities` / `api` / `features`, данные макета в `mocks`, границы слоёв в ESLint
++- [x] Этап 3.1. UI-кит: календарь, поле даты, двойной ползунок, автодополнение, выбор в строке, модальное окно, пагинация
++- [x] Этап 3.2. Поиск билетов: подсказки городов, календари, смена местами, валидация, параметры в адресе
++- [ ] Этап 3.3. Выбор поезда: фильтры, сортировка, пагинация
++- [ ] Этап 3.4. Выбор мест: количество билетов, выбор мест, услуги
++- [ ] Этап 3.5. Пассажиры, оплата, детали поездки, подписка, отзывы, оценка
+ - [ ] Этап 4. Работа с API: поиск, пагинация, сортировка, заказ, обработка ошибок
+ 
+ ## Структура
+@@ -29,22 +34,26 @@ SPA на React для покупки ж/д билетов по макетам в
+ ```
+ src/
+ ├── app/          дерево маршрутов и роутер
+-├── layout/       RootLayout, OrderLayout, Header, Footer, полоса шагов
+-├── pages/        страницы: главная, выбор поезда и мест, пассажиры, оплата, проверка, успех, 404
+-│   ├── home/     блоки главной: hero, «О нас», «Как это работает», «Отзывы»
+-│   ├── trains/   выбор поезда: карточка поезда, фильтры, последние билеты, модель и данные макета
+-│   ├── seats/    выбор мест: карточка направления, схемы вагонов, логика ярусов и цен
+-│   ├── order/    «Детали поездки» — боковая панель страниц пассажиров, оплаты и проверки
+-│   ├── passengers/ карточка пассажира
+-│   ├── confirmation/ стили проверки заказа
+-│   ├── loading/  стили экрана загрузки
+-│   └── payment/  стили оплаты
+-├── features/
+-│   └── search/   форма поиска (вариант для главной и для внутренних страниц)
++├── layout/       RootLayout, OrderLayout, OrderHero, Header, Footer, полоса шагов
++├── pages/        страницы и их стили: главная, выбор поезда и мест, пассажиры, оплата, проверка, успех, загрузка, 404
++│   └── home/     блоки главной: hero, «О нас», «Как это работает», «Отзывы»
++├── features/     блоки с поведением
++│   ├── search/   форма поиска: модель, валидация, подсказки городов
++│   ├── filters/  боковая панель фильтров
++│   ├── last-tickets/  последние билеты
++│   ├── seat-selection/ выбор мест в направлении
++│   ├── passenger-form/ карточка пассажира
++│   └── trip-details/   «Детали поездки»
++├── entities/     предметная область без поведения
++│   ├── train/    модель поезда и карточка
++│   └── coach/    логика вагона и схема мест
++├── api/          источники данных (до этапа 4 — поверх mocks)
++├── mocks/        данные макета и список городов из бэкенда
+ ├── shared/
+ │   ├── config/   адреса страниц, якоря меню, шаги заказа
+-│   ├── lib/      formatPrice
+-│   └── ui/       Icon и SVG-иконки, TrainLoader, Pagination, Amenities, PageTitle, стили кнопок, полей форм и карточек заказа (подключаются один раз в main.tsx)
++│   ├── hooks/    useClickOutside
++│   ├── lib/      даты, пагинация, formatPrice
++│   └── ui/       UI-кит (Calendar, DateInput, RangeSlider, Autocomplete, InlineSelect, Modal, Pagination), Icon, стили кнопок и форм
+ └── test/         настройка тестов, рендер приложения по адресу
+ build/
+ └── spaFallback.ts  плагин Vite: копии index.html для GitHub Pages
+@@ -75,6 +84,11 @@ build/
+ - **Нативные поля вместо самописных.** Тип билета и документа — `<select>`, пол — пара радиокнопок, флажки и способ оплаты — `<input>` со своим оформлением. Клавиатура, фокус и скринридеры работают без лишнего кода, а маски и валидация добавятся на этапе 3 поверх тех же полей.
+ - **Одна карточка поезда на двух страницах.** На проверке заказа используется та же `TrainCard`, что в списке поездов, только без рамки и с кнопкой «Изменить» вместо «Выбрать места».
+ - **Анимация загрузки — SVG и CSS.** Поезд из макета нарисован в SVG и едет по рельсу через `@keyframes`, без GIF. При `prefers-reduced-motion` он стоит на месте, а подпись «Идет поиск» объявляется скринридерам через `role="status"`. Пока экран доступен по адресу `/loading`, на этапе 4 его покажет поиск направлений.
++- **Слои проверяет линтер.** Импорт разрешён только «вниз»: `shared → entities → api → features → layout/pages → app`. Данные макета видит только `api`, поэтому на этапе 4 заглушки заменяются в одном месте.
++- **Поиск в адресе страницы.** Форма кладёт города и даты в `?from=…&to=…&date_start=…`, а шапка внутренних страниц читает их оттуда: параметры переживают перезагрузку и кнопку «Назад».
++- **Город выбирается из подсказок.** Поле хранит набранный текст и выбранный город отдельно, так что «Мос» не уйдёт в поиск. Подсказки запрашиваются после паузы в наборе, а ответ на устаревший текст отбрасывается — готово к сетевому источнику.
++- **Двойной ползунок на нативных `range`.** Два `input[type=range]` поверх общей дорожки: клавиатура, тач и скринридер работают без своего кода, мышь ловят только бегунки.
++- **Окна на `<dialog>`.** `showModal()` сам блокирует страницу, держит фокус внутри и закрывается по Escape.
+ - **Шапка поверх фото.** Шапка позиционирована абсолютно, а верхний блок каждой страницы (`.page-hero`) получает отступ на её высоту. У страниц без фото, например 404, под шапкой тёмная подложка.
+ - **Глобальные стили подключаются первыми.** Иначе Vite кладёт их после стилей компонентов, и общий `background` у `.page-hero` перебивает фон конкретной страницы.
+ - **Деплой только после проверок.** Job публикации зависит от job с линтером, Prettier, `tsc` и тестами, так что на Pages не попадает сборка с ошибками.
+diff --git a/eslint.config.js b/eslint.config.js
+index e8d10ec..dc8da06 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -43,6 +43,32 @@ export default defineConfig(
+     },
+   },
+ 
++  // Слои: shared → entities → api → features → layout/pages → app. Импорт только «вниз»:
++  // переиспользуемое не знает о страницах, а данные макета (mocks) видит только api.
++  ...[
++    ['src/shared/**', ['entities', 'api', 'features', 'layout', 'pages', 'app', 'mocks']],
++    ['src/entities/**', ['api', 'features', 'layout', 'pages', 'app', 'mocks']],
++    ['src/api/**', ['features', 'layout', 'pages', 'app']],
++    ['src/features/**', ['layout', 'pages', 'app', 'mocks']],
++    ['src/layout/**', ['pages', 'app', 'mocks']],
++  ].map(([layer, forbidden]) => ({
++    files: [`${layer}/*.{ts,tsx}`],
++    ignores: ['src/**/*.test.{ts,tsx}'],
++    rules: {
++      'no-restricted-imports': [
++        'error',
++        {
++          patterns: [
++            {
++              group: forbidden.flatMap((name) => [`**/${name}`, `**/${name}/**`]),
++              message: 'Нарушение слоёв: импорт возможен только из нижележащих слоёв.',
++            },
++          ],
++        },
++      ],
++    },
++  })),
++
+   {
+     files: ['*.{js,ts}'],
+     languageOptions: {
+diff --git a/src/api/cities.ts b/src/api/cities.ts
+new file mode 100644
+index 0000000..0c82607
+--- /dev/null
++++ b/src/api/cities.ts
+@@ -0,0 +1,22 @@
++import { MOCK_CITIES } from '../mocks/cities';
++
++const MAX_RESULTS = 10;
++/** Крупные узлы — первыми в подсказках, как «Москва» на «Мо» в макете */
++const POPULAR = ['Москва', 'Санкт-Петербург'];
++const rank = (city: string) => {
++  const index = POPULAR.indexOf(city);
++  return index === -1 ? POPULAR.length : index;
++};
++
++/**
++ * Подсказки городов. Сейчас ищет в локальном списке, на этапе 4 станет запросом
++ * GET /routes/cities?name=… — сигнатура уже асинхронная, как у API (первые 10 совпадений).
++ */
++export async function searchCities(query: string): Promise<string[]> {
++  const needle = query.trim().toLowerCase().replaceAll('ё', 'е');
++  if (!needle) return [];
++
++  return MOCK_CITIES.filter((city) => city.toLowerCase().replaceAll('ё', 'е').startsWith(needle))
++    .sort((a, b) => rank(a) - rank(b))
++    .slice(0, MAX_RESULTS);
++}
+diff --git a/src/app/routes.test.tsx b/src/app/routes.test.tsx
+index f4ad611..24e3105 100644
+--- a/src/app/routes.test.tsx
++++ b/src/app/routes.test.tsx
+@@ -6,10 +6,9 @@ import { renderRoute } from '../test/renderRoute';
+ const heading = (name: string) => screen.getByRole('heading', { level: 1, name });
+ 
+ describe('маршруты', () => {
+-  it('проходит весь заказ от главной до благодарности', async () => {
+-    const { user, router } = renderRoute(ROUTES.home);
+-
+-    await user.click(screen.getByRole('button', { name: 'Найти билеты' }));
++  // Поиск с главной проверяет SearchForm.test.tsx; здесь — переходы по шагам заказа
++  it('проходит весь заказ от выбора поезда до благодарности', async () => {
++    const { user, router } = renderRoute(ROUTES.trains);
+     expect(heading('Выбор поезда')).toBeInTheDocument();
+ 
+     const [selectSeats] = screen.getAllByRole('link', { name: 'Выбрать места' });
+diff --git a/src/pages/seats/CoachScheme.css b/src/entities/coach/CoachScheme.css
+similarity index 100%
+rename from src/pages/seats/CoachScheme.css
+rename to src/entities/coach/CoachScheme.css
+diff --git a/src/pages/seats/CoachScheme.tsx b/src/entities/coach/CoachScheme.tsx
+similarity index 99%
+rename from src/pages/seats/CoachScheme.tsx
+rename to src/entities/coach/CoachScheme.tsx
+index 0f4ffbd..6150713 100644
+--- a/src/pages/seats/CoachScheme.tsx
++++ b/src/entities/coach/CoachScheme.tsx
+@@ -1,6 +1,6 @@
+ import type { CSSProperties } from 'react';
+ import { Icon } from '../../shared/ui/Icon';
+-import type { SeatClass } from '../trains/types';
++import type { SeatClass } from '../train/types';
+ import { seatTier } from './coach';
+ import './CoachScheme.css';
+ 
+diff --git a/src/pages/seats/coach.test.ts b/src/entities/coach/coach.test.ts
+similarity index 100%
+rename from src/pages/seats/coach.test.ts
+rename to src/entities/coach/coach.test.ts
+diff --git a/src/pages/seats/coach.ts b/src/entities/coach/coach.ts
+similarity index 97%
+rename from src/pages/seats/coach.ts
+rename to src/entities/coach/coach.ts
+index e22ad9e..66aae1d 100644
+--- a/src/pages/seats/coach.ts
++++ b/src/entities/coach/coach.ts
+@@ -1,4 +1,4 @@
+-import type { SeatClass } from '../trains/types';
++import type { SeatClass } from '../train/types';
+ 
+ /** Логика вагона без вёрстки: ярусы мест и цены. Пригодится и на этапах 3–4 */
+ 
+diff --git a/src/pages/trains/TrainCard.css b/src/entities/train/TrainCard.css
+similarity index 100%
+rename from src/pages/trains/TrainCard.css
+rename to src/entities/train/TrainCard.css
+diff --git a/src/pages/trains/TrainCard.tsx b/src/entities/train/TrainCard.tsx
+similarity index 100%
+rename from src/pages/trains/TrainCard.tsx
+rename to src/entities/train/TrainCard.tsx
+diff --git a/src/pages/trains/types.ts b/src/entities/train/types.ts
+similarity index 100%
+rename from src/pages/trains/types.ts
+rename to src/entities/train/types.ts
+diff --git a/src/pages/trains/TrainsFilters.css b/src/features/filters/TrainsFilters.css
+similarity index 100%
+rename from src/pages/trains/TrainsFilters.css
+rename to src/features/filters/TrainsFilters.css
+diff --git a/src/pages/trains/TrainsFilters.tsx b/src/features/filters/TrainsFilters.tsx
+similarity index 100%
+rename from src/pages/trains/TrainsFilters.tsx
+rename to src/features/filters/TrainsFilters.tsx
+diff --git a/src/pages/trains/LastTickets.css b/src/features/last-tickets/LastTickets.css
+similarity index 100%
+rename from src/pages/trains/LastTickets.css
+rename to src/features/last-tickets/LastTickets.css
+diff --git a/src/pages/trains/LastTickets.tsx b/src/features/last-tickets/LastTickets.tsx
+similarity index 96%
+rename from src/pages/trains/LastTickets.tsx
+rename to src/features/last-tickets/LastTickets.tsx
+index 8caecbd..550deef 100644
+--- a/src/pages/trains/LastTickets.tsx
++++ b/src/features/last-tickets/LastTickets.tsx
+@@ -1,7 +1,7 @@
+ import { formatPrice } from '../../shared/lib/formatPrice';
+ import { Amenities } from '../../shared/ui/Amenities';
+ import { Icon } from '../../shared/ui/Icon';
+-import type { LastTicket } from './types';
++import type { LastTicket } from '../../entities/train/types';
+ import './LastTickets.css';
+ 
+ export function LastTickets({ tickets }: { tickets: LastTicket[] }) {
+diff --git a/src/pages/passengers/PassengerCard.css b/src/features/passenger-form/PassengerCard.css
+similarity index 100%
+rename from src/pages/passengers/PassengerCard.css
+rename to src/features/passenger-form/PassengerCard.css
+diff --git a/src/pages/passengers/PassengerCard.tsx b/src/features/passenger-form/PassengerCard.tsx
+similarity index 100%
+rename from src/pages/passengers/PassengerCard.tsx
+rename to src/features/passenger-form/PassengerCard.tsx
+diff --git a/src/features/search/SearchForm.css b/src/features/search/SearchForm.css
+index 706935b..23264d7 100644
+--- a/src/features/search/SearchForm.css
++++ b/src/features/search/SearchForm.css
+@@ -32,25 +32,11 @@
+   position: relative;
+ }
+ 
+-.search-form__input {
+-  width: 100%;
+-  height: 60px;
+-  padding: 0 60px 0 21px;
+-  font-size: 18px;
+-  color: var(--color-dark);
+-  background: var(--color-white);
+-  border: 0;
+-  border-radius: var(--radius);
+-}
+-
+-.search-form__input::placeholder {
+-  color: var(--color-gray-light);
+-}
+-
+ .search-form__icon {
+   position: absolute;
+   top: 50%;
+   right: 12px;
++  z-index: 1;
+   color: var(--color-gray-light);
+   transform: translateY(-50%);
+   pointer-events: none;
+@@ -115,11 +101,6 @@
+   margin-top: 17px;
+ }
+ 
+-.search-form_variant_compact .search-form__input {
+-  padding-left: 19px;
+-  border-radius: 3px;
+-}
+-
+ .search-form_variant_compact .search-form__submit {
+   grid-column: 2;
+   justify-self: end;
+@@ -136,3 +117,19 @@
+   box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
+   cursor: progress;
+ }
++
++/* Ошибка под полем: не сдвигает соседние элементы, читается на тёмной панели */
++.search-form__error {
++  position: absolute;
++  top: calc(100% + 6px);
++  left: 0;
++  margin: 0;
++  font-size: 14px;
++  line-height: 16px;
++  color: var(--color-error-bg);
++}
++
++.search-form__error::before {
++  content: '! ';
++  font-weight: 700;
++}
+diff --git a/src/features/search/SearchForm.test.tsx b/src/features/search/SearchForm.test.tsx
+new file mode 100644
+index 0000000..fb9f6fe
+--- /dev/null
++++ b/src/features/search/SearchForm.test.tsx
+@@ -0,0 +1,57 @@
++import { screen, within } from '@testing-library/react';
++import { describe, expect, it } from 'vitest';
++import { ROUTES } from '../../shared/config/routes';
++import { renderRoute } from '../../test/renderRoute';
++
++const form = () => screen.getByRole('form', { name: 'Поиск билетов' });
++
++describe('поиск билетов', () => {
++  it('не уходит с пустой формой и показывает ошибки', async () => {
++    const { user, router } = renderRoute(ROUTES.home);
++
++    await user.click(within(form()).getByRole('button', { name: 'Найти билеты' }));
++
++    expect(router.state.location.pathname).toBe(ROUTES.home);
++    expect(within(form()).getByText('Укажите город отправления')).toBeInTheDocument();
++    expect(within(form()).getByRole('combobox', { name: 'Откуда' })).toHaveAttribute(
++      'aria-invalid',
++      'true',
++    );
++  });
++
++  it('выбирает города из подсказок, меняет их местами и передаёт в адрес', async () => {
++    const { user, router } = renderRoute(ROUTES.home);
++    const from = within(form()).getByRole('combobox', { name: 'Откуда' });
++    const to = within(form()).getByRole('combobox', { name: 'Куда' });
++
++    await user.type(from, 'моск');
++    await user.click(await screen.findByRole('option', { name: 'Москва' }));
++    await user.type(to, 'санкт');
++    await user.click(await screen.findByRole('option', { name: 'Санкт-Петербург' }));
++    await user.click(within(form()).getByRole('button', { name: 'Поменять города местами' }));
++
++    expect(from).toHaveValue('Санкт-Петербург');
++    expect(to).toHaveValue('Москва');
++
++    await user.click(within(form()).getByRole('button', { name: 'Найти билеты' }));
++    expect(router.state.location.pathname).toBe(ROUTES.trains);
++    expect(new URLSearchParams(router.state.location.search).get('from')).toBe('Санкт-Петербург');
++  });
++
++  it('шапка внутренних страниц заполнена из адреса', () => {
++    renderRoute(`${ROUTES.trains}?from=Москва&to=Казань&date_start=2030-03-01`);
++
++    expect(within(form()).getByRole('combobox', { name: 'Откуда' })).toHaveValue('Москва');
++    expect(within(form()).getByRole('combobox', { name: 'Куда' })).toHaveValue('Казань');
++    expect(within(form()).getByLabelText('Дата отправления')).toHaveValue('01.03.2030');
++  });
++
++  it('не принимает обратную дату раньше прямой', async () => {
++    const { user } = renderRoute(
++      `${ROUTES.trains}?from=Москва&to=Казань&date_start=2030-03-10&date_end=2030-03-01`,
++    );
++
++    await user.click(within(form()).getByRole('button', { name: 'Найти билеты' }));
++    expect(within(form()).getByText('Обратно — не раньше, чем туда')).toBeInTheDocument();
++  });
++});
+diff --git a/src/features/search/SearchForm.tsx b/src/features/search/SearchForm.tsx
+index c803204..d118688 100644
+--- a/src/features/search/SearchForm.tsx
++++ b/src/features/search/SearchForm.tsx
+@@ -1,8 +1,18 @@
+-import { useId, type FormEvent } from 'react';
+-import { useNavigate } from 'react-router';
++import { useId, useState, type FormEvent } from 'react';
++import { useNavigate, useSearchParams } from 'react-router';
+ import { ROUTES } from '../../shared/config/routes';
++import { Autocomplete } from '../../shared/ui/Autocomplete';
++import { DateInput } from '../../shared/ui/DateInput';
+ import { Icon } from '../../shared/ui/Icon';
+-import type { IconName } from '../../shared/ui/icons';
++import {
++  fromSearchParams,
++  toSearchParams,
++  validateSearch,
++  type CityValue,
++  type SearchErrors,
++  type SearchValues,
++} from './model';
++import { useCitySuggestions } from './useCitySuggestions';
+ import './SearchForm.css';
+ 
+ interface SearchFormProps {
+@@ -12,75 +22,143 @@ interface SearchFormProps {
+   loading?: boolean;
+ }
+ 
+-interface FieldProps {
++interface CityFieldProps {
+   id: string;
+   label: string;
+-  placeholder: string;
+-  icon?: IconName | undefined;
+-  iconSize: number;
++  value: CityValue;
++  onChange: (value: CityValue) => void;
++  error: string | undefined;
+ }
+ 
+-function Field({ id, label, placeholder, icon, iconSize }: FieldProps) {
++function CityField({ id, label, value, onChange, error }: CityFieldProps) {
++  // Подсказки нужны, пока город не выбран: после выбора список не открываем
++  const options = useCitySuggestions(value.text, value.city === null);
++  const errorId = `${id}-error`;
++
+   return (
+     <div className="search-form__field">
+-      <label className="visually-hidden" htmlFor={id}>
+-        {label}
+-      </label>
+-      <input
+-        className="search-form__input"
++      <Autocomplete
+         id={id}
+-        type="text"
+-        placeholder={placeholder}
+-        autoComplete="off"
+-      />
+-      {icon && <Icon className="search-form__icon" name={icon} size={iconSize} />}
++        label={label}
++        placeholder={label}
++        value={value.text}
++        options={options}
++        invalid={Boolean(error)}
++        describedBy={error ? errorId : undefined}
++        onInputChange={(text) => {
++          // Набранное целиком совпало с подсказкой — город выбран и без клика
++          const exact = options.find((city) => city.toLowerCase() === text.trim().toLowerCase());
++          onChange({ text, city: exact ?? null });
++        }}
++        onSelect={(city) => onChange({ text: city, city })}
++      >
++        <Icon className="search-form__icon" name="pin" size={36} />
++      </Autocomplete>
++      <FieldError id={errorId} message={error} />
+     </div>
+   );
+ }
+ 
++function FieldError({ id, message }: { id: string; message: string | undefined }) {
++  return message ? (
++    <p className="search-form__error" id={id} role="alert">
++      {message}
++    </p>
++  ) : null;
++}
++
+ /**
+- * Форма поиска билетов. Этап 2 — вёрстка и переход к результатам.
+- * Автодополнение городов, календарь и валидация появятся на этапе 3.
++ * Форма поиска билетов: города с подсказками, смена местами, даты с календарём.
++ * Ошибки показываются после первой попытки отправки и дальше обновляются на ходу.
++ * Параметры уходят в адрес страницы, поэтому шапка внутренних страниц их помнит.
+  */
+ export function SearchForm({ variant, loading = false }: SearchFormProps) {
+   const navigate = useNavigate();
++  const [searchParams] = useSearchParams();
++  const [values, setValues] = useState<SearchValues>(() => fromSearchParams(searchParams));
++  const [submitted, setSubmitted] = useState(false);
+   const id = useId();
++  const today = new Date();
++  const errors: SearchErrors = submitted ? validateSearch(values, today) : {};
++
++  const patch = (next: Partial<SearchValues>) => setValues((current) => ({ ...current, ...next }));
+ 
+   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+     event.preventDefault();
+-    void navigate(ROUTES.trains);
++    setSubmitted(true);
++    if (Object.keys(validateSearch(values, today)).length > 0) return;
++    void navigate({ pathname: ROUTES.trains, search: toSearchParams(values).toString() });
+   };
+ 
++  const dateError = (key: 'dateThere' | 'dateBack') =>
++    errors[key] ? `${id}-${key}-error` : undefined;
++
+   return (
+-    <form className={`search-form search-form_variant_${variant}`} onSubmit={handleSubmit}>
++    <form
++      className={`search-form search-form_variant_${variant}`}
++      onSubmit={handleSubmit}
++      noValidate
++      aria-label="Поиск билетов"
++    >
+       <fieldset className="search-form__group">
+         <legend className="search-form__legend">Направление</legend>
+         <div className="search-form__row">
+-          <Field id={`${id}-from`} label="Откуда" placeholder="Откуда" icon="pin" iconSize={36} />
+-          <button className="search-form__swap" type="button" aria-label="Поменять города местами">
++          <CityField
++            id={`${id}-from`}
++            label="Откуда"
++            value={values.from}
++            error={errors.from}
++            onChange={(from) => patch({ from })}
++          />
++          <button
++            className="search-form__swap"
++            type="button"
++            aria-label="Поменять города местами"
++            onClick={() => patch({ from: values.to, to: values.from })}
++          >
+             <Icon name="swap" size={24} />
+           </button>
+-          <Field id={`${id}-to`} label="Куда" placeholder="Куда" icon="pin" iconSize={36} />
++          <CityField
++            id={`${id}-to`}
++            label="Куда"
++            value={values.to}
++            error={errors.to}
++            onChange={(to) => patch({ to })}
++          />
+         </div>
+       </fieldset>
+ 
+       <fieldset className="search-form__group">
+         <legend className="search-form__legend">Дата</legend>
+         <div className="search-form__row">
+-          <Field
+-            id={`${id}-date-start`}
+-            label="Дата отправления"
+-            placeholder="ДД/ММ/ГГ"
+-            icon="calendar"
+-            iconSize={40}
+-          />
+-          <Field
+-            id={`${id}-date-end`}
+-            label="Дата возвращения"
+-            placeholder="ДД/ММ/ГГ"
+-            icon="calendar"
+-            iconSize={40}
+-          />
++          <div className="search-form__field">
++            <DateInput
++              id={`${id}-dateThere`}
++              label="Дата отправления"
++              placeholder="ДД.ММ.ГГГГ"
++              variant="search"
++              min={today}
++              value={values.dateThere}
++              invalid={Boolean(errors.dateThere)}
++              describedBy={dateError('dateThere')}
++              onChange={(dateThere) => patch({ dateThere })}
++            />
++            <FieldError id={`${id}-dateThere-error`} message={errors.dateThere} />
++          </div>
++          <div className="search-form__field">
++            <DateInput
++              id={`${id}-dateBack`}
++              label="Дата возвращения"
++              placeholder="ДД.ММ.ГГГГ"
++              variant="search"
++              min={today}
++              value={values.dateBack}
++              invalid={Boolean(errors.dateBack)}
++              describedBy={dateError('dateBack')}
++              onChange={(dateBack) => patch({ dateBack })}
++            />
++            <FieldError id={`${id}-dateBack-error`} message={errors.dateBack} />
++          </div>
+         </div>
+       </fieldset>
+ 
+diff --git a/src/features/search/model.test.ts b/src/features/search/model.test.ts
+new file mode 100644
+index 0000000..823dee9
+--- /dev/null
++++ b/src/features/search/model.test.ts
+@@ -0,0 +1,62 @@
++import { describe, expect, it } from 'vitest';
++import {
++  EMPTY_CITY,
++  fromSearchParams,
++  toSearchParams,
++  validateSearch,
++  type SearchValues,
++} from './model';
++
++const TODAY = new Date(2018, 7, 20);
++const moscow = { text: 'Москва', city: 'Москва' };
++const spb = { text: 'Санкт-Петербург', city: 'Санкт-Петербург' };
++const values = (patch: Partial<SearchValues>): SearchValues => ({
++  from: moscow,
++  to: spb,
++  dateThere: '',
++  dateBack: '',
++  ...patch,
++});
++
++describe('проверка формы поиска', () => {
++  it('принимает два разных города без дат', () => {
++    expect(validateSearch(values({}), TODAY)).toEqual({});
++  });
++
++  it('требует выбрать города из списка', () => {
++    expect(
++      validateSearch(values({ from: EMPTY_CITY, to: { text: 'Мос', city: null } }), TODAY),
++    ).toEqual({
++      from: 'Укажите город отправления',
++      to: 'Выберите город из списка',
++    });
++  });
++
++  it('не пускает одинаковые города', () => {
++    expect(validateSearch(values({ to: moscow }), TODAY).to).toBe(
++      'Города отправления и прибытия совпадают',
++    );
++  });
++
++  it('проверяет формат и порядок дат', () => {
++    expect(validateSearch(values({ dateThere: '31.02.2018' }), TODAY).dateThere).toBe(
++      'Дата в формате ДД.ММ.ГГГГ',
++    );
++    expect(validateSearch(values({ dateThere: '19.08.2018' }), TODAY).dateThere).toBe(
++      'Эта дата уже прошла',
++    );
++    expect(
++      validateSearch(values({ dateThere: '30.08.2018', dateBack: '25.08.2018' }), TODAY).dateBack,
++    ).toBe('Обратно — не раньше, чем туда');
++  });
++
++  it('переносит параметры в адрес и обратно', () => {
++    const params = toSearchParams(values({ dateThere: '30.08.2018', dateBack: '09.09.2018' }));
++    expect(params.toString()).toBe(
++      'from=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0&to=%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3&date_start=2018-08-30&date_end=2018-09-09',
++    );
++    expect(fromSearchParams(params)).toEqual(
++      values({ dateThere: '30.08.2018', dateBack: '09.09.2018' }),
++    );
++  });
++});
+diff --git a/src/features/search/model.ts b/src/features/search/model.ts
+new file mode 100644
+index 0000000..0a4a666
+--- /dev/null
++++ b/src/features/search/model.ts
+@@ -0,0 +1,89 @@
++import { compareDays, formatIsoDate, parseDate } from '../../shared/lib/date';
++
++/** Город в форме: что набрано и какой город из подсказок выбран */
++export interface CityValue {
++  text: string;
++  city: string | null;
++}
++
++export interface SearchValues {
++  from: CityValue;
++  to: CityValue;
++  /** «ДД.ММ.ГГГГ» или пусто */
++  dateThere: string;
++  dateBack: string;
++}
++
++export type SearchErrors = Partial<Record<keyof SearchValues, string>>;
++
++export const EMPTY_CITY: CityValue = { text: '', city: null };
++
++function validateCity(value: CityValue, emptyMessage: string): string | undefined {
++  if (!value.text.trim()) return emptyMessage;
++  if (!value.city) return 'Выберите город из списка';
++  return undefined;
++}
++
++function validateDate(text: string, today: Date): Date | string | null {
++  if (!text) return null;
++  const date = parseDate(text);
++  if (!date) return 'Дата в формате ДД.ММ.ГГГГ';
++  if (compareDays(date, today) < 0) return 'Эта дата уже прошла';
++  return date;
++}
++
++/** Проверка формы поиска. Даты необязательны: API ищет и без них */
++export function validateSearch(values: SearchValues, today = new Date()): SearchErrors {
++  const errors: SearchErrors = {};
++
++  const from = validateCity(values.from, 'Укажите город отправления');
++  const to = validateCity(values.to, 'Укажите город прибытия');
++  if (from) errors.from = from;
++  if (to) errors.to = to;
++  if (!from && !to && values.from.city === values.to.city) {
++    errors.to = 'Города отправления и прибытия совпадают';
++  }
++
++  const there = validateDate(values.dateThere, today);
++  const back = validateDate(values.dateBack, today);
++  if (typeof there === 'string') errors.dateThere = there;
++  if (typeof back === 'string') errors.dateBack = back;
++  if (there instanceof Date && back instanceof Date && compareDays(back, there) < 0) {
++    errors.dateBack = 'Обратно — не раньше, чем туда';
++  }
++
++  return errors;
++}
++
++/** Параметры поиска в адресе страницы: переживают перезагрузку и попадают в шапку */
++export function toSearchParams(values: SearchValues): URLSearchParams {
++  const params = new URLSearchParams();
++  if (values.from.city) params.set('from', values.from.city);
++  if (values.to.city) params.set('to', values.to.city);
++
++  const there = parseDate(values.dateThere);
++  const back = parseDate(values.dateBack);
++  if (there) params.set('date_start', formatIsoDate(there));
++  if (back) params.set('date_end', formatIsoDate(back));
++
++  return params;
++}
++
++const fromIso = (value: string | null) => {
++  const match = value && /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
++  return match ? `${match[3]}.${match[2]}.${match[1]}` : '';
++};
++
++export function fromSearchParams(params: URLSearchParams): SearchValues {
++  const city = (name: string): CityValue => {
++    const value = params.get(name);
++    return value ? { text: value, city: value } : EMPTY_CITY;
++  };
++
++  return {
++    from: city('from'),
++    to: city('to'),
++    dateThere: fromIso(params.get('date_start')),
++    dateBack: fromIso(params.get('date_end')),
++  };
++}
+diff --git a/src/features/search/useCitySuggestions.ts b/src/features/search/useCitySuggestions.ts
+new file mode 100644
+index 0000000..e548f00
+--- /dev/null
++++ b/src/features/search/useCitySuggestions.ts
+@@ -0,0 +1,30 @@
++import { useEffect, useState } from 'react';
++import { searchCities } from '../../api/cities';
++
++const DEBOUNCE_MS = 200;
++
++/**
++ * Подсказки для введённого текста. Запрос уходит после паузы в наборе,
++ * а ответ на устаревший текст отбрасывается — важно, когда источником станет сеть.
++ */
++export function useCitySuggestions(query: string, enabled: boolean): string[] {
++  const [options, setOptions] = useState<string[]>([]);
++
++  useEffect(() => {
++    if (!enabled || !query.trim()) return undefined;
++
++    let stale = false;
++    const timer = setTimeout(() => {
++      void searchCities(query).then((result) => {
++        if (!stale) setOptions(result);
++      });
++    }, DEBOUNCE_MS);
++
++    return () => {
++      stale = true;
++      clearTimeout(timer);
++    };
++  }, [query, enabled]);
++
++  return enabled && query.trim() ? options : [];
++}
+diff --git a/src/pages/seats/DirectionCard.css b/src/features/seat-selection/DirectionCard.css
+similarity index 100%
+rename from src/pages/seats/DirectionCard.css
+rename to src/features/seat-selection/DirectionCard.css
+diff --git a/src/pages/seats/DirectionCard.test.tsx b/src/features/seat-selection/DirectionCard.test.tsx
+similarity index 100%
+rename from src/pages/seats/DirectionCard.test.tsx
+rename to src/features/seat-selection/DirectionCard.test.tsx
+diff --git a/src/pages/seats/DirectionCard.tsx b/src/features/seat-selection/DirectionCard.tsx
+similarity index 98%
+rename from src/pages/seats/DirectionCard.tsx
+rename to src/features/seat-selection/DirectionCard.tsx
+index 7408a26..ea8196a 100644
+--- a/src/pages/seats/DirectionCard.tsx
++++ b/src/features/seat-selection/DirectionCard.tsx
+@@ -4,7 +4,7 @@ import { ROUTES } from '../../shared/config/routes';
+ import { formatPrice } from '../../shared/lib/formatPrice';
+ import { Icon } from '../../shared/ui/Icon';
+ import type { IconName } from '../../shared/ui/icons';
+-import type { SeatClass, TripLeg } from '../trains/types';
++import type { SeatClass, TripLeg } from '../../entities/train/types';
+ import {
+   countByTier,
+   totalPrice,
+@@ -12,8 +12,8 @@ import {
+   type CoachSet,
+   type ServiceId,
+   type ServiceState,
+-} from './coach';
+-import { CoachScheme } from './CoachScheme';
++} from '../../entities/coach/coach';
++import { CoachScheme } from '../../entities/coach/CoachScheme';
+ import './DirectionCard.css';
+ 
+ export interface PassengerCounts {
+diff --git a/src/pages/order/TripDetails.css b/src/features/trip-details/TripDetails.css
+similarity index 100%
+rename from src/pages/order/TripDetails.css
+rename to src/features/trip-details/TripDetails.css
+diff --git a/src/pages/order/TripDetails.tsx b/src/features/trip-details/TripDetails.tsx
+similarity index 100%
+rename from src/pages/order/TripDetails.tsx
+rename to src/features/trip-details/TripDetails.tsx
+diff --git a/src/index.css b/src/index.css
+index b8c10c3..94352dd 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -13,6 +13,11 @@
+   --color-page: #f7f5f9;
+   --color-panel: #f4f3f6;
+   --color-text-strong: #3e3c41;
++  /* Ошибки и подтверждения: плашки формы пассажира и всплывающие окна */
++  --color-error: #ff3d00;
++  --color-error-bg: #ffb59e;
++  --color-success-bg: #b2f6a1;
++  --color-info-bg: #fcf9a1;
+   --color-quote: #928f94;
+   --color-white: #fff;
+ 
+diff --git a/src/layout/OrderHero.css b/src/layout/OrderHero.css
+new file mode 100644
+index 0000000..bb6b35c
+--- /dev/null
++++ b/src/layout/OrderHero.css
+@@ -0,0 +1,46 @@
++/*
++ * Фото шапки страниц заказа: кадр 1954×1467 со сдвигом −32/−137 при ширине 1920.
++ * Непрозрачность и подложка подобраны по экспорту макета.
++ */
++.order-hero {
++  position: relative;
++  isolation: isolate;
++  height: 592px;
++  overflow: hidden;
++  background-color: var(--color-gray);
++}
++
++.order-hero::before {
++  position: absolute;
++  top: -137px;
++  left: -1.67%;
++  z-index: -1;
++  width: 101.8%;
++  height: 1467px;
++  content: '';
++  background: url('../assets/images/hero-order.jpg') center / cover no-repeat;
++  opacity: 0.7;
++}
++
++/* Затемнение под логотипом, как в макете */
++.order-hero::after {
++  position: absolute;
++  inset: 0 0 auto;
++  z-index: -1;
++  height: var(--header-top-height);
++  content: '';
++  background: rgb(41 41 41 / 60%);
++}
++
++.order-hero > .container {
++  padding-top: 111px;
++}
++
++/* Экран загрузки: шапка 554px, панель формы — 285px */
++.order-hero_loading {
++  height: 554px;
++}
++
++.order-hero_loading .search-form_variant_compact {
++  height: 285px;
++}
+diff --git a/src/layout/OrderHero.tsx b/src/layout/OrderHero.tsx
+new file mode 100644
+index 0000000..1bc7ba4
+--- /dev/null
++++ b/src/layout/OrderHero.tsx
+@@ -0,0 +1,21 @@
++import { SearchForm } from '../features/search/SearchForm';
++import './OrderHero.css';
++
++interface OrderHeroProps {
++  /** Экран загрузки: шапка ниже, кнопка поиска в нажатом состоянии */
++  loading?: boolean;
++}
++
++/** Шапка страниц заказа и экрана загрузки: фото и горизонтальная форма поиска */
++export function OrderHero({ loading = false }: OrderHeroProps) {
++  return (
++    <section
++      className={`page-hero order-hero${loading ? ' order-hero_loading' : ''}`}
++      aria-label="Поиск билетов"
++    >
++      <div className="container">
++        <SearchForm variant="compact" loading={loading} />
++      </div>
++    </section>
++  );
++}
+diff --git a/src/layout/OrderLayout.css b/src/layout/OrderLayout.css
+index c94ca53..8e57008 100644
+--- a/src/layout/OrderLayout.css
++++ b/src/layout/OrderLayout.css
+@@ -1,41 +1,3 @@
+-/*
+- * Фото шапки страниц заказа: кадр 1954×1467 со сдвигом −32/−137 при ширине 1920.
+- * Непрозрачность и подложка подобраны по экспорту макета.
+- */
+-.order-hero {
+-  position: relative;
+-  isolation: isolate;
+-  height: 592px;
+-  overflow: hidden;
+-  background-color: var(--color-gray);
+-}
+-
+-.order-hero::before {
+-  position: absolute;
+-  top: -137px;
+-  left: -1.67%;
+-  z-index: -1;
+-  width: 101.8%;
+-  height: 1467px;
+-  content: '';
+-  background: url('../assets/images/hero-order.jpg') center / cover no-repeat;
+-  opacity: 0.7;
+-}
+-
+-/* Затемнение под логотипом, как в макете */
+-.order-hero::after {
+-  position: absolute;
+-  inset: 0 0 auto;
+-  z-index: -1;
+-  height: var(--header-top-height);
+-  content: '';
+-  background: rgb(41 41 41 / 60%);
+-}
+-
+-.order-hero > .container {
+-  padding-top: 111px;
+-}
+-
+ .order-page {
+   padding: 95px 0 193px;
+   background: var(--color-page);
+diff --git a/src/layout/OrderLayout.tsx b/src/layout/OrderLayout.tsx
+index 9c50ee7..a2c1fd7 100644
+--- a/src/layout/OrderLayout.tsx
++++ b/src/layout/OrderLayout.tsx
+@@ -1,5 +1,5 @@
+ import { Outlet } from 'react-router';
+-import { SearchForm } from '../features/search/SearchForm';
++import { OrderHero } from './OrderHero';
+ import { OrderSteps } from './OrderSteps';
+ import { useOrderStep } from './useOrderStep';
+ import './OrderLayout.css';
+@@ -10,11 +10,7 @@ export function OrderLayout() {
+ 
+   return (
+     <>
+-      <section className="page-hero order-hero" aria-label="Поиск билетов">
+-        <div className="container">
+-          <SearchForm variant="compact" />
+-        </div>
+-      </section>
++      <OrderHero />
+       {step && <OrderSteps current={step} />}
+       <main className="order-page">
+         <div className="container order-page__grid">
+diff --git a/src/mocks/cities.ts b/src/mocks/cities.ts
+new file mode 100644
+index 0000000..ac377e1
+--- /dev/null
++++ b/src/mocks/cities.ts
+@@ -0,0 +1,155 @@
++/**
++ * Города с вокзалами — из данных бэкенда диплома (backend/database/data/railway-stations.js).
++ * До этапа 4 подсказки берутся отсюда, потом — запросом GET /routes/cities.
++ */
++export const MOCK_CITIES: readonly string[] = [
++  'Агрыз',
++  'Адлер',
++  'Анапа',
++  'Арсеньев',
++  'Архангельск',
++  'Астрахань',
++  'Аткарск',
++  'Балаково',
++  'Балашов',
++  'Барнаул',
++  'Белгород',
++  'Белогорск',
++  'Бердяуш',
++  'Биробиджан',
++  'Благовещенск',
++  'Борзя',
++  'Борисоглебск',
++  'Брянск',
++  'Бузулук',
++  'Буй',
++  'Великие Луки',
++  'Великий Новгород',
++  'Вельск',
++  'Верхний Уфалей',
++  'Владивосток',
++  'Владимир',
++  'Волгоград',
++  'Волжский',
++  'Вологда',
++  'Воркута',
++  'Воронеж',
++  'Выборг',
++  'Галич',
++  'Георгиевск',
++  'Глазов',
++  'Гродеково',
++  'Грозный',
++  'Гудермес',
++  'Дальнереченск',
++  'Данилов',
++  'Дербент',
++  'Дзержинск',
++  'Елец',
++  'Ершов',
++  'Ессентуки',
++  'Забайкальск',
++  'Зверево',
++  'Златоуст',
++  'Иваново',
++  'Ижевск',
++  'Йошкар-Ола',
++  'Казань',
++  'Калуга (Калуга-1)',
++  'Канаш',
++  'Карталы',
++  'Кизляр',
++  'Кинешма',
++  'Киров',
++  'Кирсанов',
++  'Кисловодск',
++  'Ковров',
++  'Кострома',
++  'Котельнич',
++  'Котлас',
++  'Красноуфимск',
++  'Кропачёво',
++  'Курган',
++  'Курск',
++  'Лабытнанги',
++  'Лев Толстой',
++  'Липецк',
++  'Лиски',
++  'Магнитогорск',
++  'Махачкала',
++  'Миасс',
++  'Микунь',
++  'Миллерово',
++  'Минеральные Воды',
++  'Могоча',
++  'Москва',
++  'Мурманск',
++  'Муром',
++  'Навашино',
++  'Нальчик',
++  'Нерюнгри',
++  'Нижний Новгород',
++  'Новороссийск',
++  'Новотроицк',
++  'Новочеркасск',
++  'Новый Ургал',
++  'Няндома',
++  'Омск',
++  'Орел',
++  'Орел-1',
++  'Оренбург',
++  'Орск',
++  'Петров Вал',
++  'Петрозаводск',
++  'Печора',
++  'Поворино',
++  'Псков',
++  'Пугачевск',
++  'Пятигорск',
++  'Россошь',
++  'Ростов',
++  'Ростов-на-Дону (Ростов-Главный)',
++  'Ртищево',
++  'Рыбинск',
++  'Сальск',
++  'Санкт-Петербург',
++  'Сарапул',
++  'Саратов',
++  'Свободный',
++  'Северодвинск',
++  'Сергач',
++  'Сердобск',
++  'Сибай',
++  'Смоленск',
++  'Сосногорск',
++  'Сочи',
++  'Спасск-Дальний',
++  'Ставрополь',
++  'Старый Оскол',
++  'Сургут',
++  'Сыктывкар',
++  'Таганрог',
++  'Тамбов',
++  'Тверь',
++  'Троицк',
++  'Тула',
++  'Тында',
++  'Усинск',
++  'Уссурийск',
++  'Усть-Катав',
++  'Ухта',
++  'Хабаровск',
++  'Чебоксары',
++  'Челябинск',
++  'Череповец',
++  'Черкесск',
++  'Чертково',
++  'Чита (Чита-2)',
++  'Шадринск',
++  'Шарья',
++  'Шахунья',
++  'Шилка',
++  'Шумерля',
++  'Шумиха',
++  'Янаул',
++];
+diff --git a/src/pages/order/mock.ts b/src/mocks/order.ts
+similarity index 50%
+rename from src/pages/order/mock.ts
+rename to src/mocks/order.ts
+index 9338d36..0c45fb4 100644
+--- a/src/pages/order/mock.ts
++++ b/src/mocks/order.ts
+@@ -1,4 +1,4 @@
+-import type { TripDetailsData } from './TripDetails';
++import type { TripDetailsData } from '../features/trip-details/TripDetails';
+ 
+ /** Детали поездки с макетов пассажиров и оплаты. Настоящие — из заказа на этапе 4 */
+ export const MOCK_TRIP_DETAILS: TripDetailsData = {
+@@ -24,3 +24,37 @@ export const MOCK_TRIP_DETAILS: TripDetailsData = {
+   ],
+   total: 7760,
+ };
++
++/** Пассажиры с макета проверки. Настоящие — из формы пассажиров на этапах 3–4 */
++export const MOCK_CONFIRM_PASSENGERS = [
++  {
++    id: 'irina',
++    type: 'Взрослый',
++    name: 'Мартынюк Ирина Эдуардовна',
++    info: [
++      ['Пол', 'женский'],
++      ['Дата рождения', '17.02.1985'],
++      ['Паспорт РФ', '4204 380694'],
++    ],
++  },
++  {
++    id: 'kirill',
++    type: 'Детский',
++    name: 'Мартынюк Кирилл Сергеевич',
++    info: [
++      ['Пол', 'мужской'],
++      ['Дата рождения', '25.01.2006'],
++      ['Свидетельство о рождении', 'VIII УН 256319'],
++    ],
++  },
++  {
++    id: 'sergey',
++    type: 'Взрослый',
++    name: 'Мартынюк Сергей Петрович',
++    info: [
++      ['Пол', 'мужской'],
++      ['Дата рождения', '19.06.1982'],
++      ['Паспорт РФ', '4204 380694'],
++    ],
++  },
++];
+diff --git a/src/mocks/passengers.ts b/src/mocks/passengers.ts
+new file mode 100644
+index 0000000..a6df2ea
+--- /dev/null
++++ b/src/mocks/passengers.ts
+@@ -0,0 +1,29 @@
++import type { PassengerDraft } from '../features/passenger-form/PassengerCard';
++
++/** Пассажиры с макета: взрослая Ирина и ребёнок Кирилл, третий — свёрнут */
++export const MOCK_PASSENGERS: PassengerDraft[] = [
++  {
++    type: 'adult',
++    lastName: 'Мартынюк',
++    firstName: 'Ирина',
++    patronymic: 'Эдуардовна',
++    gender: 'female',
++    birthDate: '',
++    limitedMobility: false,
++    document: 'passport',
++    series: '',
++    number: '',
++  },
++  {
++    type: 'child',
++    lastName: '',
++    firstName: '',
++    patronymic: '',
++    gender: 'male',
++    birthDate: '',
++    limitedMobility: false,
++    document: 'birth',
++    series: '',
++    number: '',
++  },
++];
+diff --git a/src/pages/seats/mock.ts b/src/mocks/seats.ts
+similarity index 86%
+rename from src/pages/seats/mock.ts
+rename to src/mocks/seats.ts
+index cfcd97d..51abd51 100644
+--- a/src/pages/seats/mock.ts
++++ b/src/mocks/seats.ts
+@@ -1,5 +1,5 @@
+-import type { SeatClass, TripLeg } from '../trains/types';
+-import type { CoachSet, ServiceId, ServiceState } from './coach';
++import type { SeatClass, TripLeg } from '../entities/train/types';
++import type { CoachSet, ServiceId, ServiceState } from '../entities/coach/coach';
+ 
+ /** Данные с макетов выбора мест. Настоящие придут из API на этапе 4 */
+ 
+@@ -86,3 +86,13 @@ export const COACHES_BY_TYPE: Partial<Record<SeatClass, CoachSet>> = {
+     ],
+   },
+ };
++
++/** Поезд на макете выбора мест */
++export const SEATS_TRAIN = {
++  trainNumber: '116С',
++  origin: 'Адлер',
++  fromCity: 'Москва',
++  toCity: 'Санкт-Петербург',
++  leg: SEATS_LEG,
++  durationText: '9 часов\n42 минуты',
++};
+diff --git a/src/pages/trains/mock.ts b/src/mocks/trains.ts
+similarity index 97%
+rename from src/pages/trains/mock.ts
+rename to src/mocks/trains.ts
+index 40b3651..8bfbed8 100644
+--- a/src/pages/trains/mock.ts
++++ b/src/mocks/trains.ts
+@@ -1,4 +1,4 @@
+-import type { LastTicket, TrainRoute, TripLeg } from './types';
++import type { LastTicket, TrainRoute, TripLeg } from '../entities/train/types';
+ 
+ /** Данные с макета: до подключения API (этап 4) страница показывает их */
+ 
+diff --git a/src/pages/confirmation/ConfirmationPage.css b/src/pages/ConfirmationPage.css
+similarity index 100%
+rename from src/pages/confirmation/ConfirmationPage.css
+rename to src/pages/ConfirmationPage.css
+diff --git a/src/pages/ConfirmationPage.tsx b/src/pages/ConfirmationPage.tsx
+index 28bad1f..626a605 100644
+--- a/src/pages/ConfirmationPage.tsx
++++ b/src/pages/ConfirmationPage.tsx
+@@ -3,45 +3,11 @@ import { ROUTES } from '../shared/config/routes';
+ import { formatPrice } from '../shared/lib/formatPrice';
+ import { Icon } from '../shared/ui/Icon';
+ import { PageTitle } from '../shared/ui/PageTitle';
+-import './confirmation/ConfirmationPage.css';
+-import { MOCK_TRIP_DETAILS } from './order/mock';
+-import { TripDetails } from './order/TripDetails';
+-import { MOCK_ROUTES } from './trains/mock';
+-import { TrainCard } from './trains/TrainCard';
+-
+-/** Пассажиры с макета проверки. Настоящие — из формы пассажиров на этапах 3–4 */
+-const PASSENGERS = [
+-  {
+-    id: 'irina',
+-    type: 'Взрослый',
+-    name: 'Мартынюк Ирина Эдуардовна',
+-    info: [
+-      ['Пол', 'женский'],
+-      ['Дата рождения', '17.02.1985'],
+-      ['Паспорт РФ', '4204 380694'],
+-    ],
+-  },
+-  {
+-    id: 'kirill',
+-    type: 'Детский',
+-    name: 'Мартынюк Кирилл Сергеевич',
+-    info: [
+-      ['Пол', 'мужской'],
+-      ['Дата рождения', '25.01.2006'],
+-      ['Свидетельство о рождении', 'VIII УН 256319'],
+-    ],
+-  },
+-  {
+-    id: 'sergey',
+-    type: 'Взрослый',
+-    name: 'Мартынюк Сергей Петрович',
+-    info: [
+-      ['Пол', 'мужской'],
+-      ['Дата рождения', '19.06.1982'],
+-      ['Паспорт РФ', '4204 380694'],
+-    ],
+-  },
+-];
++import './ConfirmationPage.css';
++import { MOCK_CONFIRM_PASSENGERS, MOCK_TRIP_DETAILS } from '../mocks/order';
++import { TripDetails } from '../features/trip-details/TripDetails';
++import { MOCK_ROUTES } from '../mocks/trains';
++import { TrainCard } from '../entities/train/TrainCard';
+ 
+ const [ROUTE] = MOCK_ROUTES;
+ 
+@@ -76,7 +42,7 @@ export function ConfirmationPage() {
+           </h2>
+           <div className="confirm-card__body">
+             <ul className="confirm-passengers">
+-              {PASSENGERS.map(({ id, type, name, info }) => (
++              {MOCK_CONFIRM_PASSENGERS.map(({ id, type, name, info }) => (
+                 <li key={id} className="confirm-passenger">
+                   <span className="confirm-passenger__type">
+                     <Icon className="confirm-passenger__icon" name="accountCircle" size={82} />
+diff --git a/src/pages/LoadingPage.css b/src/pages/LoadingPage.css
+new file mode 100644
+index 0000000..17347a2
+--- /dev/null
++++ b/src/pages/LoadingPage.css
+@@ -0,0 +1,5 @@
++.loading-page {
++  min-height: 774px;
++  padding-top: 261px;
++  background: var(--color-text-strong);
++}
+diff --git a/src/pages/LoadingPage.tsx b/src/pages/LoadingPage.tsx
+index 29257b3..6193bdf 100644
+--- a/src/pages/LoadingPage.tsx
++++ b/src/pages/LoadingPage.tsx
+@@ -1,8 +1,7 @@
+-import { SearchForm } from '../features/search/SearchForm';
++import { OrderHero } from '../layout/OrderHero';
+ import { PageTitle } from '../shared/ui/PageTitle';
+ import { TrainLoader } from '../shared/ui/TrainLoader';
+-import '../layout/OrderLayout.css';
+-import './loading/LoadingPage.css';
++import './LoadingPage.css';
+ 
+ /**
+  * Экран загрузки по макету: короткая шапка с формой поиска и анимация на тёмном фоне.
+@@ -12,11 +11,7 @@ export function LoadingPage() {
+   return (
+     <>
+       <PageTitle title="Идет поиск" />
+-      <section className="page-hero order-hero loading-hero" aria-label="Поиск билетов">
+-        <div className="container">
+-          <SearchForm variant="compact" loading />
+-        </div>
+-      </section>
++      <OrderHero loading />
+       <main className="loading-page">
+         <h1 className="visually-hidden">Поиск билетов</h1>
+         <TrainLoader />
+diff --git a/src/pages/PassengersPage.tsx b/src/pages/PassengersPage.tsx
+index dd94aa7..415e376 100644
+--- a/src/pages/PassengersPage.tsx
++++ b/src/pages/PassengersPage.tsx
+@@ -1,37 +1,10 @@
+ import { Link } from 'react-router';
+ import { ROUTES } from '../shared/config/routes';
+ import { PageTitle } from '../shared/ui/PageTitle';
+-import { MOCK_TRIP_DETAILS } from './order/mock';
+-import { TripDetails } from './order/TripDetails';
+-import { PassengerCard, PassengerStub, type PassengerDraft } from './passengers/PassengerCard';
+-
+-/** Пассажиры с макета: взрослая Ирина и ребёнок Кирилл, третий — свёрнут */
+-const PASSENGERS: PassengerDraft[] = [
+-  {
+-    type: 'adult',
+-    lastName: 'Мартынюк',
+-    firstName: 'Ирина',
+-    patronymic: 'Эдуардовна',
+-    gender: 'female',
+-    birthDate: '',
+-    limitedMobility: false,
+-    document: 'passport',
+-    series: '',
+-    number: '',
+-  },
+-  {
+-    type: 'child',
+-    lastName: '',
+-    firstName: '',
+-    patronymic: '',
+-    gender: 'male',
+-    birthDate: '',
+-    limitedMobility: false,
+-    document: 'birth',
+-    series: '',
+-    number: '',
+-  },
+-];
++import { MOCK_TRIP_DETAILS } from '../mocks/order';
++import { MOCK_PASSENGERS } from '../mocks/passengers';
++import { TripDetails } from '../features/trip-details/TripDetails';
++import { PassengerCard, PassengerStub } from '../features/passenger-form/PassengerCard';
+ 
+ export function PassengersPage() {
+   return (
+@@ -42,7 +15,7 @@ export function PassengersPage() {
+         <h1 className="visually-hidden" id="passengers-title">
+           Пассажиры
+         </h1>
+-        {PASSENGERS.map((passenger, index) => (
++        {MOCK_PASSENGERS.map((passenger, index) => (
+           <PassengerCard key={index} index={index + 1} passenger={passenger} />
+         ))}
+         <PassengerStub label="Пассажир 3" variant="collapsed" />
+diff --git a/src/pages/payment/PaymentPage.css b/src/pages/PaymentPage.css
+similarity index 100%
+rename from src/pages/payment/PaymentPage.css
+rename to src/pages/PaymentPage.css
+diff --git a/src/pages/PaymentPage.tsx b/src/pages/PaymentPage.tsx
+index 0b5a684..ef43401 100644
+--- a/src/pages/PaymentPage.tsx
++++ b/src/pages/PaymentPage.tsx
+@@ -2,9 +2,9 @@ import { useId } from 'react';
+ import { Link } from 'react-router';
+ import { ROUTES } from '../shared/config/routes';
+ import { PageTitle } from '../shared/ui/PageTitle';
+-import { MOCK_TRIP_DETAILS } from './order/mock';
+-import { TripDetails } from './order/TripDetails';
+-import './payment/PaymentPage.css';
++import { MOCK_TRIP_DETAILS } from '../mocks/order';
++import { TripDetails } from '../features/trip-details/TripDetails';
++import './PaymentPage.css';
+ 
+ const PERSON = [
+   ['lastName', 'Фамилия', 'Мартынюк'],
+diff --git a/src/pages/seats/SeatsPage.css b/src/pages/SeatsPage.css
+similarity index 100%
+rename from src/pages/seats/SeatsPage.css
+rename to src/pages/SeatsPage.css
+diff --git a/src/pages/SeatsPage.tsx b/src/pages/SeatsPage.tsx
+index c5b7af6..2dd2f81 100644
+--- a/src/pages/SeatsPage.tsx
++++ b/src/pages/SeatsPage.tsx
+@@ -1,21 +1,12 @@
+ import { Link } from 'react-router';
+ import { ROUTES } from '../shared/config/routes';
+ import { PageTitle } from '../shared/ui/PageTitle';
+-import { DirectionCard } from './seats/DirectionCard';
+-import { COACHES_BY_TYPE, SEATS_LEG } from './seats/mock';
+-import './seats/SeatsPage.css';
+-import { LastTickets } from './trains/LastTickets';
+-import { MOCK_LAST_TICKETS } from './trains/mock';
+-import { TrainsFilters } from './trains/TrainsFilters';
+-
+-const TRAIN = {
+-  trainNumber: '116С',
+-  origin: 'Адлер',
+-  fromCity: 'Москва',
+-  toCity: 'Санкт-Петербург',
+-  leg: SEATS_LEG,
+-  durationText: '9 часов\n42 минуты',
+-};
++import { DirectionCard } from '../features/seat-selection/DirectionCard';
++import { COACHES_BY_TYPE, SEATS_TRAIN } from '../mocks/seats';
++import './SeatsPage.css';
++import { LastTickets } from '../features/last-tickets/LastTickets';
++import { MOCK_LAST_TICKETS } from '../mocks/trains';
++import { TrainsFilters } from '../features/filters/TrainsFilters';
+ 
+ /**
+  * Выбор мест туда и обратно. По умолчанию — макет «выбор мест» (купе);
+@@ -35,14 +26,14 @@ export function SeatsPage() {
+           Выбор мест
+         </h1>
+         <DirectionCard
+-          {...TRAIN}
++          {...SEATS_TRAIN}
+           direction="there"
+           passengers={{ adults: 2, children: 1, infants: 0 }}
+           coachType="second"
+           coachesByType={COACHES_BY_TYPE}
+         />
+         <DirectionCard
+-          {...TRAIN}
++          {...SEATS_TRAIN}
+           direction="back"
+           passengers={{ adults: 2, children: 0, infants: 0 }}
+           coachesByType={COACHES_BY_TYPE}
+diff --git a/src/pages/SuccessPage.tsx b/src/pages/SuccessPage.tsx
+index 0f5ad42..a297774 100644
+--- a/src/pages/SuccessPage.tsx
++++ b/src/pages/SuccessPage.tsx
+@@ -6,7 +6,7 @@ import { ROUTES } from '../shared/config/routes';
+ import { formatPrice } from '../shared/lib/formatPrice';
+ import { Icon } from '../shared/ui/Icon';
+ import { PageTitle } from '../shared/ui/PageTitle';
+-import { MOCK_TRIP_DETAILS } from './order/mock';
++import { MOCK_TRIP_DETAILS } from '../mocks/order';
+ import './SuccessPage.css';
+ 
+ /** Шаги после покупки. Акцентная часть подписи выделена жирным, как в макете */
+diff --git a/src/pages/trains/TrainsPage.css b/src/pages/TrainsPage.css
+similarity index 100%
+rename from src/pages/trains/TrainsPage.css
+rename to src/pages/TrainsPage.css
+diff --git a/src/pages/TrainsPage.tsx b/src/pages/TrainsPage.tsx
+index 413ffb7..d3aaf02 100644
+--- a/src/pages/TrainsPage.tsx
++++ b/src/pages/TrainsPage.tsx
+@@ -1,10 +1,11 @@
++import { useState } from 'react';
+ import { PageTitle } from '../shared/ui/PageTitle';
+ import { Pagination } from '../shared/ui/Pagination';
+-import { LastTickets } from './trains/LastTickets';
+-import { MOCK_LAST_TICKETS, MOCK_ROUTES, MOCK_TOTAL_COUNT } from './trains/mock';
+-import { TrainCard } from './trains/TrainCard';
+-import { TrainsFilters } from './trains/TrainsFilters';
+-import './trains/TrainsPage.css';
++import { LastTickets } from '../features/last-tickets/LastTickets';
++import { MOCK_LAST_TICKETS, MOCK_ROUTES, MOCK_TOTAL_COUNT } from '../mocks/trains';
++import { TrainCard } from '../entities/train/TrainCard';
++import { TrainsFilters } from '../features/filters/TrainsFilters';
++import './TrainsPage.css';
+ 
+ const PAGE_SIZES = [5, 10, 20];
+ 
+@@ -13,6 +14,8 @@ const PAGE_SIZES = [5, 10, 20];
+  * Сортировка, размер страницы и пагинация оживут на этапах 3–4.
+  */
+ export function TrainsPage() {
++  const [page, setPage] = useState(1);
++
+   return (
+     <>
+       <PageTitle title="Выбор поезда" />
+@@ -54,7 +57,7 @@ export function TrainsPage() {
+         </ul>
+ 
+         <div className="trains__pagination">
+-          <Pagination current={1} total={3} label="Страницы результатов" />
++          <Pagination current={page} total={3} label="Страницы результатов" onChange={setPage} />
+         </div>
+       </section>
+     </>
+diff --git a/src/pages/loading/LoadingPage.css b/src/pages/loading/LoadingPage.css
+deleted file mode 100644
+index e8c2365..0000000
+--- a/src/pages/loading/LoadingPage.css
++++ /dev/null
+@@ -1,14 +0,0 @@
+-/* Шапка экрана загрузки короче: 554px, панель формы — 285px */
+-.loading-hero {
+-  height: 554px;
+-}
+-
+-.loading-hero .search-form_variant_compact {
+-  height: 285px;
+-}
+-
+-.loading-page {
+-  min-height: 774px;
+-  padding-top: 261px;
+-  background: var(--color-text-strong);
+-}
+diff --git a/src/shared/hooks/useClickOutside.ts b/src/shared/hooks/useClickOutside.ts
+new file mode 100644
+index 0000000..ca2eaf6
+--- /dev/null
++++ b/src/shared/hooks/useClickOutside.ts
+@@ -0,0 +1,26 @@
++import { useEffect, type RefObject } from 'react';
++
++/** Закрывает всплывающий элемент по клику вне его и по Escape */
++export function useClickOutside(
++  ref: RefObject<HTMLElement | null>,
++  onClose: () => void,
++  active: boolean,
++) {
++  useEffect(() => {
++    if (!active) return undefined;
++
++    const handlePointer = (event: PointerEvent) => {
++      if (ref.current && !ref.current.contains(event.target as Node)) onClose();
++    };
++    const handleKey = (event: KeyboardEvent) => {
++      if (event.key === 'Escape') onClose();
++    };
++
++    document.addEventListener('pointerdown', handlePointer);
++    document.addEventListener('keydown', handleKey);
++    return () => {
++      document.removeEventListener('pointerdown', handlePointer);
++      document.removeEventListener('keydown', handleKey);
++    };
++  }, [ref, onClose, active]);
++}
+diff --git a/src/shared/lib/date.test.ts b/src/shared/lib/date.test.ts
+new file mode 100644
+index 0000000..40f28c7
+--- /dev/null
++++ b/src/shared/lib/date.test.ts
+@@ -0,0 +1,31 @@
++import { describe, expect, it } from 'vitest';
++import { compareDays, formatDate, maskDate, monthGrid, parseDate } from './date';
++
++describe('даты', () => {
++  it('разбирает ДД.ММ.ГГГГ и отбрасывает несуществующие даты', () => {
++    expect(parseDate('30.08.2018')).toEqual(new Date(2018, 7, 30));
++    expect(parseDate('30/08/2018')).toEqual(new Date(2018, 7, 30));
++    expect(parseDate('31.02.2018')).toBeNull();
++    expect(parseDate('3.8.2018')).toBeNull();
++  });
++
++  it('форматирует обратно и маскирует ввод', () => {
++    expect(formatDate(new Date(2018, 7, 3))).toBe('03.08.2018');
++    expect(maskDate('30082018')).toBe('30.08.2018');
++    expect(maskDate('30a0')).toBe('30.0');
++  });
++
++  it('сравнивает по дню, без учёта времени', () => {
++    expect(compareDays(new Date(2018, 7, 30, 23), new Date(2018, 7, 30, 1))).toBe(0);
++    expect(compareDays(new Date(2018, 7, 29), new Date(2018, 7, 30))).toBe(-1);
++  });
++
++  it('строит сетку месяца с понедельника, как на макете (август 2018)', () => {
++    const weeks = monthGrid(new Date(2018, 7, 1));
++    const days = weeks.map((week) => week.map(({ date }) => date.getDate()));
++
++    expect(days[0]).toEqual([30, 31, 1, 2, 3, 4, 5]);
++    expect(days.at(-1)).toEqual([27, 28, 29, 30, 31, 1, 2]);
++    expect(weeks[0]?.[0]?.outside).toBe(true);
++  });
++});
+diff --git a/src/shared/lib/date.ts b/src/shared/lib/date.ts
+new file mode 100644
+index 0000000..8daa45d
+--- /dev/null
++++ b/src/shared/lib/date.ts
+@@ -0,0 +1,119 @@
++/** Даты без времени: всё сравнивается по дню, в локальной зоне пользователя */
++
++export const MONTHS = [
++  'Январь',
++  'Февраль',
++  'Март',
++  'Апрель',
++  'Май',
++  'Июнь',
++  'Июль',
++  'Август',
++  'Сентябрь',
++  'Октябрь',
++  'Ноябрь',
++  'Декабрь',
++] as const;
++
++const MONTHS_GENITIVE = [
++  'января',
++  'февраля',
++  'марта',
++  'апреля',
++  'мая',
++  'июня',
++  'июля',
++  'августа',
++  'сентября',
++  'октября',
++  'ноября',
++  'декабря',
++] as const;
++
++export function startOfDay(date: Date): Date {
++  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
++}
++
++export function isSameDay(a: Date, b: Date): boolean {
++  return (
++    a.getFullYear() === b.getFullYear() &&
++    a.getMonth() === b.getMonth() &&
++    a.getDate() === b.getDate()
++  );
++}
++
++/** −1, 0, 1 — сравнение по дню */
++export function compareDays(a: Date, b: Date): number {
++  return Math.sign(startOfDay(a).getTime() - startOfDay(b).getTime());
++}
++
++export function addMonths(date: Date, months: number): Date {
++  return new Date(date.getFullYear(), date.getMonth() + months, 1);
++}
++
++const pad = (value: number) => String(value).padStart(2, '0');
++
++/** 30.08.2018 */
++export function formatDate(date: Date): string {
++  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
++}
++
++/** «30 августа 2018» — для подписей скринридеру */
++export function formatDateLong(date: Date): string {
++  return `${date.getDate()} ${MONTHS_GENITIVE[date.getMonth()]} ${date.getFullYear()}`;
++}
++
++/** 2018-08-30 — формат API */
++export function formatIsoDate(date: Date): string {
++  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
++}
++
++/**
++ * «ДД.ММ.ГГГГ» (разделитель — точка, слеш или дефис) → дата.
++ * Несуществующие даты вроде 31.02 не проходят: Date их «переносит», а мы сверяем обратно.
++ */
++export function parseDate(text: string): Date | null {
++  const match = /^(\d{2})[./-](\d{2})[./-](\d{4})$/.exec(text.trim());
++  if (!match) return null;
++
++  const [, day, month, year] = match.map(Number) as [number, number, number, number];
++  const date = new Date(year, month - 1, day);
++
++  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
++    ? date
++    : null;
++}
++
++/** Маска ввода: оставляет цифры и расставляет точки — «30082018» → «30.08.2018» */
++export function maskDate(text: string): string {
++  const digits = text.replace(/\D/g, '').slice(0, 8);
++  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)];
++  return parts.filter(Boolean).join('.');
++}
++
++export interface CalendarDay {
++  date: Date;
++  /** День соседнего месяца, показанный для заполнения недели */
++  outside: boolean;
++}
++
++/** Сетка месяца по неделям с понедельника: 5–6 строк по 7 дней */
++export function monthGrid(month: Date): CalendarDay[][] {
++  const first = new Date(month.getFullYear(), month.getMonth(), 1);
++  // getDay(): 0 — воскресенье; переводим в 0 — понедельник
++  const offset = (first.getDay() + 6) % 7;
++  const start = new Date(first.getFullYear(), first.getMonth(), 1 - offset);
++  const weeks: CalendarDay[][] = [];
++
++  for (let cursor = start; ;) {
++    const week: CalendarDay[] = [];
++    for (let i = 0; i < 7; i += 1) {
++      week.push({ date: cursor, outside: cursor.getMonth() !== month.getMonth() });
++      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
++    }
++    weeks.push(week);
++    if (cursor.getMonth() !== month.getMonth()) break;
++  }
++
++  return weeks;
++}
+diff --git a/src/shared/lib/pagination.test.ts b/src/shared/lib/pagination.test.ts
+new file mode 100644
+index 0000000..96b98bf
+--- /dev/null
++++ b/src/shared/lib/pagination.test.ts
+@@ -0,0 +1,14 @@
++import { describe, expect, it } from 'vitest';
++import { paginationRange } from './pagination';
++
++describe('пагинация', () => {
++  it('показывает все страницы, если их немного', () => {
++    expect(paginationRange(1, 3)).toEqual([1, 2, 3]);
++  });
++
++  it('сворачивает середину в «…»', () => {
++    expect(paginationRange(2, 10)).toEqual([1, 2, 3, 'gap', 10]);
++    expect(paginationRange(6, 10)).toEqual([1, 'gap', 5, 6, 7, 'gap', 10]);
++    expect(paginationRange(10, 10)).toEqual([1, 'gap', 9, 10]);
++  });
++});
+diff --git a/src/shared/lib/pagination.ts b/src/shared/lib/pagination.ts
+new file mode 100644
+index 0000000..92c3fd6
+--- /dev/null
++++ b/src/shared/lib/pagination.ts
+@@ -0,0 +1,22 @@
++export type PageItem = number | 'gap';
++
++/**
++ * Номера для пагинации: первая, последняя, текущая с соседями, остальное — «…».
++ * 10 страниц, текущая 2 → 1 2 3 … 10 (как в «экспликации»).
++ */
++export function paginationRange(current: number, total: number, siblings = 1): PageItem[] {
++  if (total <= 5 + siblings * 2) {
++    return Array.from({ length: total }, (_, index) => index + 1);
++  }
++
++  const start = Math.max(2, current - siblings);
++  const end = Math.min(total - 1, current + siblings);
++  const items: PageItem[] = [1];
++
++  if (start > 2) items.push('gap');
++  for (let page = start; page <= end; page += 1) items.push(page);
++  if (end < total - 1) items.push('gap');
++  items.push(total);
++
++  return items;
++}
+diff --git a/src/shared/ui/Autocomplete.css b/src/shared/ui/Autocomplete.css
+new file mode 100644
+index 0000000..bb24c62
+--- /dev/null
++++ b/src/shared/ui/Autocomplete.css
+@@ -0,0 +1,92 @@
++.autocomplete {
++  position: relative;
++}
++
++.autocomplete__control {
++  position: relative;
++}
++
++.autocomplete__input,
++.autocomplete__ghost {
++  width: 100%;
++  height: 60px;
++  padding: 0 60px 0 20px;
++  font-size: 18px;
++  line-height: 60px;
++}
++
++.autocomplete__input {
++  position: relative;
++  color: var(--color-dark);
++  background: transparent;
++  border: 1px solid transparent;
++  border-radius: 3px;
++}
++
++.autocomplete__control {
++  background: var(--color-white);
++  border-radius: 3px;
++}
++
++.autocomplete__input:focus-visible {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 1px;
++}
++
++.autocomplete__input::placeholder {
++  color: var(--color-gray-light);
++}
++
++.autocomplete__input[aria-invalid='true'] {
++  border-color: var(--color-error);
++  box-shadow: inset 0 0 0 1px var(--color-error);
++}
++
++/* Серое продолжение подсказки лежит под прозрачным полем ввода */
++.autocomplete__ghost {
++  position: absolute;
++  inset: 0;
++  overflow: hidden;
++  white-space: pre;
++  color: var(--color-gray-light);
++  border: 1px solid transparent;
++}
++
++.autocomplete__typed {
++  visibility: hidden;
++}
++
++/* Список городов по «экспликации»: заглавные 14px на светло-сером, тень */
++.autocomplete__list {
++  position: absolute;
++  top: calc(100% + 5px);
++  left: 0;
++  z-index: 20;
++  width: 100%;
++  max-height: 260px;
++  margin: 0;
++  padding: 8px 0;
++  overflow-y: auto;
++  list-style: none;
++  background: var(--color-panel);
++  border-radius: 3px;
++  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
++}
++
++.autocomplete__option {
++  padding: 4px 30px;
++  font-size: 14px;
++  line-height: 18px;
++  text-transform: uppercase;
++  color: var(--color-dark);
++  cursor: pointer;
++}
++
++.autocomplete__option:hover {
++  background: var(--color-accent-light);
++}
++
++.autocomplete__option:active,
++.autocomplete__option_active {
++  background: var(--color-accent);
++}
+diff --git a/src/shared/ui/Autocomplete.tsx b/src/shared/ui/Autocomplete.tsx
+new file mode 100644
+index 0000000..80cf6c2
+--- /dev/null
++++ b/src/shared/ui/Autocomplete.tsx
+@@ -0,0 +1,129 @@
++import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
++import './Autocomplete.css';
++
++interface AutocompleteProps {
++  id: string;
++  label: string;
++  value: string;
++  /** Ввод текста: родитель подбирает подсказки (сейчас из списка, на этапе 4 — запросом к API) */
++  onInputChange: (value: string) => void;
++  /** Выбор подсказки */
++  onSelect: (option: string) => void;
++  options: readonly string[];
++  placeholder?: string;
++  invalid?: boolean;
++  describedBy?: string | undefined;
++  className?: string;
++  children?: ReactNode;
++}
++
++/**
++ * Поле с подсказками по шаблону combobox из WAI-ARIA: стрелки двигают по списку,
++ * Enter выбирает, Escape закрывает. Как в макете, первая подходящая подсказка
++ * дописывается в поле серым; Tab или стрелка вправо её принимают.
++ */
++export function Autocomplete(props: AutocompleteProps) {
++  const { id, label, value, onInputChange, onSelect, options, placeholder, invalid, describedBy } =
++    props;
++  const [open, setOpen] = useState(false);
++  const [active, setActive] = useState(-1);
++  const listId = useId();
++  const visible = open && options.length > 0;
++  const [first] = options;
++  const ghost =
++    value && first && first.toLowerCase().startsWith(value.toLowerCase()) && first !== value
++      ? first.slice(value.length)
++      : '';
++
++  const choose = (option: string) => {
++    onSelect(option);
++    setOpen(false);
++    setActive(-1);
++  };
++
++  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
++    if (event.key === 'ArrowDown') {
++      event.preventDefault();
++      setOpen(true);
++      setActive((index) => Math.min(index + 1, options.length - 1));
++    } else if (event.key === 'ArrowUp') {
++      event.preventDefault();
++      setActive((index) => Math.max(index - 1, 0));
++    } else if (event.key === 'Enter' && visible && active >= 0) {
++      event.preventDefault();
++      const option = options[active];
++      if (option) choose(option);
++    } else if (event.key === 'Escape') {
++      setOpen(false);
++    } else if ((event.key === 'Tab' || event.key === 'ArrowRight') && ghost && first) {
++      // Принять подсказку; Tab при этом не уводит фокус, чтобы было видно результат
++      event.preventDefault();
++      choose(first);
++    }
++  };
++
++  return (
++    <div className={`autocomplete ${props.className ?? ''}`}>
++      <label className="visually-hidden" htmlFor={id}>
++        {label}
++      </label>
++      <div className="autocomplete__control">
++        {ghost && (
++          <span className="autocomplete__ghost" aria-hidden="true">
++            <span className="autocomplete__typed">{value}</span>
++            {ghost}
++          </span>
++        )}
++        <input
++          className="autocomplete__input"
++          id={id}
++          type="text"
++          role="combobox"
++          autoComplete="off"
++          spellCheck={false}
++          placeholder={placeholder}
++          value={value}
++          aria-expanded={visible}
++          aria-controls={listId}
++          aria-autocomplete="both"
++          aria-activedescendant={visible && active >= 0 ? `${listId}-${active}` : undefined}
++          aria-invalid={invalid || undefined}
++          aria-describedby={describedBy}
++          onChange={(event) => {
++            onInputChange(event.target.value);
++            setOpen(true);
++            setActive(-1);
++          }}
++          onFocus={() => setOpen(true)}
++          onBlur={() => setOpen(false)}
++          onKeyDown={handleKeyDown}
++        />
++        {props.children}
++      </div>
++      <ul
++        className="autocomplete__list"
++        id={listId}
++        role="listbox"
++        aria-label={label}
++        hidden={!visible}
++      >
++        {options.map((option, index) => (
++          <li
++            key={option}
++            id={`${listId}-${index}`}
++            className={`autocomplete__option${index === active ? ' autocomplete__option_active' : ''}`}
++            role="option"
++            aria-selected={index === active}
++            // mousedown, а не click: иначе поле теряет фокус и список закрывается раньше выбора
++            onMouseDown={(event) => {
++              event.preventDefault();
++              choose(option);
++            }}
++          >
++            {option}
++          </li>
++        ))}
++      </ul>
++    </div>
++  );
++}
+diff --git a/src/shared/ui/Calendar.css b/src/shared/ui/Calendar.css
+new file mode 100644
+index 0000000..52dfd68
+--- /dev/null
++++ b/src/shared/ui/Calendar.css
+@@ -0,0 +1,121 @@
++/* Размеры по «экспликации»: 352px, шапка 67px, тень 0 4px 4px */
++.calendar {
++  width: 352px;
++  max-width: calc(100vw - 32px);
++  padding-bottom: 12px;
++  font-size: 18px;
++  color: var(--color-dark);
++  background: var(--color-white);
++  border-radius: var(--radius);
++  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
++}
++
++.calendar__head {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  height: 67px;
++  padding: 0 32px;
++  border-bottom: 1px solid #e5e5e5;
++}
++
++.calendar__month {
++  font-weight: 300;
++  font-size: 30px;
++  line-height: 1;
++}
++
++/* Стрелки — треугольники 6×8 */
++.calendar__nav {
++  width: 24px;
++  height: 24px;
++  padding: 0;
++  background: none;
++  border: 0;
++  cursor: pointer;
++}
++
++.calendar__nav::before {
++  display: block;
++  margin: 0 auto;
++  content: '';
++  border-block: 4px solid transparent;
++}
++
++.calendar__nav_prev::before {
++  border-right: 6px solid var(--color-dark);
++}
++
++.calendar__nav_next::before {
++  border-left: 6px solid var(--color-dark);
++}
++
++.calendar__nav:hover::before {
++  border-left-color: var(--color-accent);
++  border-right-color: var(--color-accent);
++}
++
++.calendar__nav:active::before {
++  border-left-color: var(--color-accent-dark);
++  border-right-color: var(--color-accent-dark);
++}
++
++.calendar__nav:disabled {
++  visibility: hidden;
++}
++
++.calendar__grid {
++  width: 100%;
++  margin-top: 8px;
++  padding: 0 14px;
++  border-collapse: collapse;
++}
++
++.calendar__grid td {
++  padding: 3px 0;
++  text-align: center;
++}
++
++.calendar__day {
++  width: 34px;
++  height: 32px;
++  padding: 0;
++  font: inherit;
++  color: inherit;
++  background: none;
++  border: 1px solid transparent;
++  border-radius: 3px;
++  cursor: pointer;
++}
++
++.calendar__day_sunday {
++  font-weight: 700;
++}
++
++.calendar__day_past {
++  color: var(--color-gray);
++  cursor: default;
++}
++
++.calendar__day_outside {
++  color: #e5e5e5;
++  cursor: default;
++}
++
++.calendar__day:not(:disabled):hover {
++  background: #fff4e0;
++  border-color: var(--color-accent-light);
++}
++
++.calendar__day:not(:disabled):active,
++.calendar__day_selected,
++.calendar__day_selected:hover {
++  background: #ffe4b0;
++  border-color: var(--color-accent);
++}
++
++.calendar__day:focus-visible,
++.calendar__nav:focus-visible {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 1px;
++}
+diff --git a/src/shared/ui/Calendar.tsx b/src/shared/ui/Calendar.tsx
+new file mode 100644
+index 0000000..c44cd4c
+--- /dev/null
++++ b/src/shared/ui/Calendar.tsx
+@@ -0,0 +1,97 @@
++import { useState } from 'react';
++import {
++  addMonths,
++  compareDays,
++  formatDateLong,
++  isSameDay,
++  monthGrid,
++  MONTHS,
++  startOfDay,
++} from '../lib/date';
++import './Calendar.css';
++
++interface CalendarProps {
++  value: Date | null;
++  onSelect: (date: Date) => void;
++  /** Раньше этой даты выбрать нельзя (по умолчанию — без ограничения) */
++  min?: Date | undefined;
++}
++
++/**
++ * Календарь по «экспликации»: месяц со стрелками, неделя с понедельника,
++ * воскресенья жирные, прошедшие дни недоступны, выбранный — в оранжевой рамке.
++ */
++export function Calendar({ value, onSelect, min }: CalendarProps) {
++  const [month, setMonth] = useState(() => addMonths(value ?? min ?? new Date(), 0));
++  const today = startOfDay(new Date());
++  // Листать в прошлое до месяца с минимальной датой
++  const canGoBack = !min || compareDays(addMonths(month, -1), addMonths(min, 0)) >= 0;
++  const showYear = month.getFullYear() !== today.getFullYear();
++
++  return (
++    <div className="calendar">
++      <div className="calendar__head">
++        <button
++          className="calendar__nav calendar__nav_prev"
++          type="button"
++          aria-label="Предыдущий месяц"
++          disabled={!canGoBack}
++          onClick={() => setMonth((current) => addMonths(current, -1))}
++        />
++        <span className="calendar__month" aria-live="polite">
++          {MONTHS[month.getMonth()]}
++          {showYear && ` ${month.getFullYear()}`}
++        </span>
++        <button
++          className="calendar__nav calendar__nav_next"
++          type="button"
++          aria-label="Следующий месяц"
++          onClick={() => setMonth((current) => addMonths(current, 1))}
++        />
++      </div>
++
++      <table className="calendar__grid">
++        <thead className="visually-hidden">
++          <tr>
++            {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day) => (
++              <th key={day} scope="col">
++                {day}
++              </th>
++            ))}
++          </tr>
++        </thead>
++        <tbody>
++          {monthGrid(month).map((week) => (
++            <tr key={week[0]?.date.toISOString()}>
++              {week.map(({ date, outside }) => {
++                const disabled = outside || (min !== undefined && compareDays(date, min) < 0);
++                const selected = value !== null && isSameDay(date, value);
++                const classes = ['calendar__day'];
++                if (outside) classes.push('calendar__day_outside');
++                else if (disabled) classes.push('calendar__day_past');
++                if (selected) classes.push('calendar__day_selected');
++                if (date.getDay() === 0) classes.push('calendar__day_sunday');
++
++                return (
++                  <td key={date.toISOString()}>
++                    <button
++                      className={classes.join(' ')}
++                      type="button"
++                      disabled={disabled}
++                      aria-pressed={selected}
++                      aria-label={formatDateLong(date)}
++                      aria-current={isSameDay(date, today) ? 'date' : undefined}
++                      onClick={() => onSelect(date)}
++                    >
++                      {date.getDate()}
++                    </button>
++                  </td>
++                );
++              })}
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </div>
++  );
++}
+diff --git a/src/shared/ui/DateInput.css b/src/shared/ui/DateInput.css
+new file mode 100644
+index 0000000..7ac00e8
+--- /dev/null
++++ b/src/shared/ui/DateInput.css
+@@ -0,0 +1,79 @@
++.date-input {
++  position: relative;
++}
++
++.date-input__field {
++  width: 100%;
++  padding: 0 60px 0 20px;
++  font-size: 18px;
++  color: var(--color-dark);
++  background: var(--color-white);
++  border: 1px solid transparent;
++  border-radius: 3px;
++}
++
++.date-input_variant_search .date-input__field {
++  height: 60px;
++}
++
++.date-input_variant_filter .date-input__field {
++  height: 43px;
++  padding: 0 44px 0 8px;
++}
++
++.date-input__field:focus-visible {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 1px;
++}
++
++.date-input__field::placeholder {
++  color: var(--color-gray-light);
++}
++
++.date-input__field[aria-invalid='true'] {
++  border-color: var(--color-error);
++  box-shadow: inset 0 0 0 1px var(--color-error);
++}
++
++.date-input__toggle {
++  position: absolute;
++  top: 50%;
++  right: 12px;
++  display: grid;
++  padding: 0;
++  color: var(--color-gray-light);
++  background: none;
++  border: 0;
++  transform: translateY(-50%);
++  cursor: pointer;
++}
++
++.date-input_variant_filter .date-input__toggle {
++  right: 14px;
++}
++
++.date-input__toggle:hover {
++  color: var(--color-accent-light);
++}
++
++.date-input__toggle:active,
++.date-input__toggle[aria-expanded='true'] {
++  color: var(--color-accent);
++}
++
++/* Календарь под полем с треугольником-указателем */
++.date-input__popup {
++  position: absolute;
++  top: calc(100% + 12px);
++  left: -10px;
++  z-index: 20;
++}
++
++.date-input__popup::before {
++  position: absolute;
++  top: -8px;
++  left: 42px;
++  content: '';
++  border-inline: 9px solid transparent;
++  border-bottom: 9px solid var(--color-white);
++}
+diff --git a/src/shared/ui/DateInput.tsx b/src/shared/ui/DateInput.tsx
+new file mode 100644
+index 0000000..80bea18
+--- /dev/null
++++ b/src/shared/ui/DateInput.tsx
+@@ -0,0 +1,76 @@
++import { useCallback, useId, useRef, useState, type ChangeEvent } from 'react';
++import { useClickOutside } from '../hooks/useClickOutside';
++import { formatDate, maskDate, parseDate } from '../lib/date';
++import { Calendar } from './Calendar';
++import { Icon } from './Icon';
++import './DateInput.css';
++
++interface DateInputProps {
++  id: string;
++  label: string;
++  /** Текст поля «ДД.ММ.ГГГГ»: форма хранит строку и сама решает, валидна ли она */
++  value: string;
++  onChange: (value: string) => void;
++  placeholder?: string;
++  min?: Date | undefined;
++  invalid?: boolean;
++  describedBy?: string | undefined;
++  /** search — поле шапки, filter — поле боковой панели */
++  variant: 'search' | 'filter';
++}
++
++/** Поле даты: ввод по маске или выбор в календаре (открывается кнопкой и по фокусу) */
++export function DateInput(props: DateInputProps) {
++  const { id, label, value, onChange, placeholder, min, invalid, describedBy, variant } = props;
++  const [open, setOpen] = useState(false);
++  const rootRef = useRef<HTMLDivElement>(null);
++  const popupId = useId();
++  const close = useCallback(() => setOpen(false), []);
++  useClickOutside(rootRef, close, open);
++
++  const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
++    onChange(maskDate(event.target.value));
++  };
++
++  return (
++    <div className={`date-input date-input_variant_${variant}`} ref={rootRef}>
++      <label className="visually-hidden" htmlFor={id}>
++        {label}
++      </label>
++      <input
++        className="date-input__field"
++        id={id}
++        type="text"
++        inputMode="numeric"
++        autoComplete="off"
++        placeholder={placeholder}
++        value={value}
++        onChange={handleInput}
++        aria-invalid={invalid || undefined}
++        aria-describedby={describedBy}
++      />
++      <button
++        className="date-input__toggle"
++        type="button"
++        aria-label={`${label}: выбрать в календаре`}
++        aria-expanded={open}
++        aria-controls={popupId}
++        onClick={() => setOpen((current) => !current)}
++      >
++        <Icon name="calendar" size={variant === 'search' ? 40 : 27} />
++      </button>
++      {open && (
++        <div className="date-input__popup" id={popupId}>
++          <Calendar
++            value={parseDate(value)}
++            min={min}
++            onSelect={(date) => {
++              onChange(formatDate(date));
++              setOpen(false);
++            }}
++          />
++        </div>
++      )}
++    </div>
++  );
++}
+diff --git a/src/shared/ui/InlineSelect.css b/src/shared/ui/InlineSelect.css
+new file mode 100644
+index 0000000..8e7002a
+--- /dev/null
++++ b/src/shared/ui/InlineSelect.css
+@@ -0,0 +1,57 @@
++.inline-select {
++  position: relative;
++  display: inline-flex;
++  gap: 6px;
++}
++
++.inline-select__button {
++  padding: 0;
++  font: inherit;
++  color: var(--color-text-strong);
++  background: none;
++  border: 0;
++  cursor: pointer;
++}
++
++.inline-select__button:hover {
++  color: var(--color-accent);
++}
++
++.inline-select__button:active,
++.inline-select__button[aria-expanded='true'] {
++  color: var(--color-accent-dark);
++}
++
++/* Список по «экспликации»: белая карточка с тенью под текущим значением */
++.inline-select__list {
++  position: absolute;
++  top: calc(100% + 4px);
++  right: -8px;
++  z-index: 20;
++  min-width: 140px;
++  margin: 0;
++  padding: 4px 0;
++  list-style: none;
++  background: var(--color-white);
++  border-radius: 3px;
++  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
++}
++
++.inline-select__list:focus-visible {
++  outline: 2px solid var(--color-accent);
++}
++
++.inline-select__option {
++  padding: 6px 12px;
++  font-size: 16px;
++  color: var(--color-text-strong);
++  cursor: pointer;
++}
++
++.inline-select__option[aria-selected='true'] {
++  font-weight: 700;
++}
++
++.inline-select__option_active {
++  background: var(--color-accent-light);
++}
+diff --git a/src/shared/ui/InlineSelect.tsx b/src/shared/ui/InlineSelect.tsx
+new file mode 100644
+index 0000000..5a455b6
+--- /dev/null
++++ b/src/shared/ui/InlineSelect.tsx
+@@ -0,0 +1,108 @@
++import { useCallback, useId, useRef, useState, type KeyboardEvent } from 'react';
++import { useClickOutside } from '../hooks/useClickOutside';
++import './InlineSelect.css';
++
++export interface SelectOption<T extends string> {
++  value: T;
++  label: string;
++}
++
++interface InlineSelectProps<T extends string> {
++  label: string;
++  value: T;
++  options: readonly SelectOption<T>[];
++  onChange: (value: T) => void;
++}
++
++/**
++ * Выбор в строке текста — «сортировать по: времени» из макета.
++ * Кнопка раскрывает список (listbox), стрелки и Enter работают с клавиатуры.
++ */
++export function InlineSelect<T extends string>({
++  label,
++  value,
++  options,
++  onChange,
++}: InlineSelectProps<T>) {
++  const [open, setOpen] = useState(false);
++  const [active, setActive] = useState(0);
++  const rootRef = useRef<HTMLSpanElement>(null);
++  const listRef = useRef<HTMLUListElement>(null);
++  const id = useId();
++  const close = useCallback(() => setOpen(false), []);
++  useClickOutside(rootRef, close, open);
++  const current = options.find((option) => option.value === value) ?? options[0];
++
++  const toggle = () => {
++    setActive(
++      Math.max(
++        0,
++        options.findIndex((option) => option.value === value),
++      ),
++    );
++    setOpen((state) => !state);
++    // Фокус в список, чтобы стрелки работали сразу
++    requestAnimationFrame(() => listRef.current?.focus());
++  };
++
++  const choose = (option: SelectOption<T>) => {
++    onChange(option.value);
++    setOpen(false);
++  };
++
++  const handleKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
++    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
++      event.preventDefault();
++      const step = event.key === 'ArrowDown' ? 1 : -1;
++      setActive((index) => (index + step + options.length) % options.length);
++    } else if (event.key === 'Enter' || event.key === ' ') {
++      event.preventDefault();
++      const option = options[active];
++      if (option) choose(option);
++    }
++  };
++
++  return (
++    <span className="inline-select" ref={rootRef}>
++      <span id={`${id}-label`}>{label}:</span>
++      <button
++        className="inline-select__button"
++        type="button"
++        aria-haspopup="listbox"
++        aria-expanded={open}
++        aria-labelledby={`${id}-label ${id}-button`}
++        id={`${id}-button`}
++        onClick={toggle}
++      >
++        {current?.label}
++      </button>
++      {open && (
++        <ul
++          className="inline-select__list"
++          role="listbox"
++          tabIndex={-1}
++          ref={listRef}
++          aria-labelledby={`${id}-label`}
++          aria-activedescendant={`${id}-${active}`}
++          onKeyDown={handleKeyDown}
++        >
++          {options.map((option, index) => (
++            // Клавиатуру обрабатывает сам listbox через aria-activedescendant
++            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
++            <li
++              key={option.value}
++              id={`${id}-${index}`}
++              className={`inline-select__option${index === active ? ' inline-select__option_active' : ''}`}
++              role="option"
++              aria-selected={option.value === value}
++              onClick={() => choose(option)}
++              onMouseEnter={() => setActive(index)}
++            >
++              {option.label}
++            </li>
++          ))}
++        </ul>
++      )}
++    </span>
++  );
++}
+diff --git a/src/shared/ui/Modal.css b/src/shared/ui/Modal.css
+new file mode 100644
+index 0000000..5a3dae1
+--- /dev/null
++++ b/src/shared/ui/Modal.css
+@@ -0,0 +1,90 @@
++/* Размеры по «экспликации»: 666px, цветная шапка 106px, подвал за пунктиром */
++.modal {
++  width: min(666px, calc(100vw - 32px));
++  padding: 0;
++  color: #000;
++  background: var(--color-white);
++  border: 1px solid #c4c4c4;
++  box-shadow: 0 2px 2px rgb(0 0 0 / 25%);
++}
++
++.modal::backdrop {
++  background: rgb(41 41 41 / 50%);
++}
++
++.modal__head {
++  display: flex;
++  align-items: center;
++  height: 106px;
++  padding: 0 40px;
++}
++
++.modal_variant_error .modal__head {
++  background: var(--color-error-bg);
++}
++
++.modal_variant_info .modal__head {
++  background: var(--color-info-bg);
++}
++
++.modal_variant_info .modal__body {
++  background: #fbfbfb;
++}
++
++.modal__icon {
++  display: grid;
++  place-content: center;
++  width: 26px;
++  height: 26px;
++  font-weight: 900;
++  font-size: 18px;
++  border-radius: 50%;
++}
++
++.modal_variant_error .modal__icon {
++  color: var(--color-error-bg);
++  background: #ffebe5;
++}
++
++.modal_variant_info .modal__icon {
++  font-family: Georgia, serif;
++  color: #fcf9a1;
++  background: #e5e3e9;
++}
++
++.modal__body {
++  padding: 50px 50px 46px;
++}
++
++.modal__title {
++  margin: 0 0 26px;
++  font-weight: 700;
++  font-size: 24px;
++  line-height: 28px;
++}
++
++.modal__text {
++  font-size: 16px;
++  line-height: 19px;
++}
++
++.modal__text p {
++  margin: 0;
++}
++
++.modal__text p + p {
++  margin-top: 19px;
++}
++
++.modal__footer {
++  display: flex;
++  justify-content: center;
++  padding: 28px 0;
++  border-top: 1px dashed var(--color-gray);
++}
++
++.modal__close {
++  width: 233px;
++  min-height: 52px;
++  text-transform: none;
++}
+diff --git a/src/shared/ui/Modal.tsx b/src/shared/ui/Modal.tsx
+new file mode 100644
+index 0000000..13a954c
+--- /dev/null
++++ b/src/shared/ui/Modal.tsx
+@@ -0,0 +1,55 @@
++import { useEffect, useRef, type ReactNode } from 'react';
++import './Modal.css';
++
++interface ModalProps {
++  open: boolean;
++  onClose: () => void;
++  /** error — красная шапка с «!», info — жёлтая с «i» */
++  variant: 'error' | 'info';
++  title?: string;
++  children: ReactNode;
++}
++
++/**
++ * Всплывающее окно на нативном <dialog>: showModal() сам блокирует страницу,
++ * ловит фокус внутри и закрывается по Escape. Вид — по «экспликации».
++ */
++export function Modal({ open, onClose, variant, title, children }: ModalProps) {
++  const ref = useRef<HTMLDialogElement>(null);
++
++  useEffect(() => {
++    const dialog = ref.current;
++    if (!dialog) return;
++    if (open && !dialog.open) dialog.showModal();
++    if (!open && dialog.open) dialog.close();
++  }, [open]);
++
++  return (
++    <dialog
++      ref={ref}
++      className={`modal modal_variant_${variant}`}
++      aria-label={title ?? (variant === 'error' ? 'Ошибка' : 'Информация')}
++      // Escape закрывает окно силами браузера — сообщаем родителю
++      onClose={onClose}
++    >
++      <div className="modal__head">
++        <span className="modal__icon" aria-hidden="true">
++          {variant === 'error' ? '!' : 'i'}
++        </span>
++      </div>
++      <div className="modal__body">
++        {title && <h2 className="modal__title">{title}</h2>}
++        <div className="modal__text">{children}</div>
++      </div>
++      <div className="modal__footer">
++        <button
++          className="button button_variant_outline modal__close"
++          type="button"
++          onClick={onClose}
++        >
++          Понятно
++        </button>
++      </div>
++    </dialog>
++  );
++}
+diff --git a/src/shared/ui/Pagination.css b/src/shared/ui/Pagination.css
+index 440052c..c4a7f04 100644
+--- a/src/shared/ui/Pagination.css
++++ b/src/shared/ui/Pagination.css
+@@ -23,14 +23,29 @@
+     border-color 0.15s;
+ }
+ 
+-.pagination__item:hover {
++.pagination__item:not(:disabled):hover {
+   color: var(--color-accent);
+   border-color: var(--color-accent);
+ }
+ 
+-.pagination__item:active,
++.pagination__item:not(:disabled, .pagination__gap):active,
+ .pagination__item_current {
+   color: var(--color-white);
+   background: var(--color-accent);
+   border-color: var(--color-accent);
+ }
++
++.pagination__item:disabled {
++  color: #e5e5e5;
++  border-color: #e5e5e5;
++  cursor: default;
++}
++
++.pagination__gap {
++  cursor: default;
++}
++
++.pagination__gap:hover {
++  color: var(--color-gray);
++  border-color: #c4c4c4;
++}
+diff --git a/src/shared/ui/Pagination.tsx b/src/shared/ui/Pagination.tsx
+index 99007cc..b38265a 100644
+--- a/src/shared/ui/Pagination.tsx
++++ b/src/shared/ui/Pagination.tsx
+@@ -1,3 +1,4 @@
++import { paginationRange } from '../lib/pagination';
+ import { Icon } from './Icon';
+ import './Pagination.css';
+ 
+@@ -5,31 +6,53 @@ interface PaginationProps {
+   current: number;
+   total: number;
+   label: string;
++  onChange: (page: number) => void;
+ }
+ 
+-/** Пагинация по макету. Переключение страниц подключается на этапе 4 */
+-export function Pagination({ current, total, label }: PaginationProps) {
++/** Пагинация по «экспликации»: стрелки, номера и «…» для пропущенных страниц */
++export function Pagination({ current, total, label, onChange }: PaginationProps) {
++  if (total <= 1) return null;
++
+   return (
+     <nav className="pagination" aria-label={label}>
+-      <button className="pagination__item" type="button" aria-label="Предыдущая страница">
++      <button
++        className="pagination__item"
++        type="button"
++        aria-label="Предыдущая страница"
++        disabled={current === 1}
++        onClick={() => onChange(current - 1)}
++      >
+         <Icon name="chevronLeft" size={44} />
+       </button>
+-      {Array.from({ length: total }, (_, index) => {
+-        const page = index + 1;
+-        const isCurrent = page === current;
+-
+-        return (
++      {paginationRange(current, total).map((page, index) =>
++        page === 'gap' ? (
++          <span
++            key={`gap-${index}`}
++            className="pagination__item pagination__gap"
++            aria-hidden="true"
++          >
++            …
++          </span>
++        ) : (
+           <button
+             key={page}
+-            className={`pagination__item${isCurrent ? ' pagination__item_current' : ''}`}
++            className={`pagination__item${page === current ? ' pagination__item_current' : ''}`}
+             type="button"
+-            aria-current={isCurrent ? 'page' : undefined}
++            aria-label={`Страница ${page}`}
++            aria-current={page === current ? 'page' : undefined}
++            onClick={() => onChange(page)}
+           >
+             {page}
+           </button>
+-        );
+-      })}
+-      <button className="pagination__item" type="button" aria-label="Следующая страница">
++        ),
++      )}
++      <button
++        className="pagination__item"
++        type="button"
++        aria-label="Следующая страница"
++        disabled={current === total}
++        onClick={() => onChange(current + 1)}
++      >
+         <Icon name="chevronRight" size={44} />
+       </button>
+     </nav>
+diff --git a/src/shared/ui/RangeSlider.css b/src/shared/ui/RangeSlider.css
+new file mode 100644
+index 0000000..ba54b41
+--- /dev/null
++++ b/src/shared/ui/RangeSlider.css
+@@ -0,0 +1,120 @@
++/* Размеры бегунков и дорожек — из макета фильтров */
++.range_size_price {
++  --track: 19px;
++  --thumb: 24px;
++}
++
++.range_size_time {
++  --track: 10px;
++  --thumb: 18px;
++}
++
++.range__track {
++  position: relative;
++  height: var(--track);
++  border: 1px solid #c4c4c4;
++  border-radius: 8px;
++}
++
++.range__fill {
++  position: absolute;
++  inset: -1px auto -1px var(--from);
++  width: calc(var(--to) - var(--from));
++  background: var(--color-accent);
++  border-radius: 8px;
++}
++
++/*
++ * Оба input лежат поверх дорожки; сами они прозрачны для мыши, ловятся только бегунки.
++ * Ширина больше дорожки на бегунок, чтобы центр бегунка совпадал с краем.
++ */
++.range__input {
++  position: absolute;
++  top: 50%;
++  left: calc(var(--thumb) / -2);
++  width: calc(100% + var(--thumb));
++  height: var(--thumb);
++  margin: 0;
++  background: none;
++  transform: translateY(-50%);
++  pointer-events: none;
++  appearance: none;
++}
++
++.range__input::-webkit-slider-thumb {
++  width: var(--thumb);
++  height: var(--thumb);
++  background: var(--color-white);
++  border: 0;
++  border-radius: 50%;
++  cursor: grab;
++  pointer-events: auto;
++  appearance: none;
++}
++
++.range__input::-moz-range-thumb {
++  width: var(--thumb);
++  height: var(--thumb);
++  background: var(--color-white);
++  border: 0;
++  border-radius: 50%;
++  cursor: grab;
++  pointer-events: auto;
++}
++
++.range__input:hover::-webkit-slider-thumb {
++  background: var(--color-accent-light);
++}
++
++.range__input:active::-webkit-slider-thumb {
++  background: var(--color-accent);
++  cursor: grabbing;
++}
++
++.range__input:hover::-moz-range-thumb {
++  background: var(--color-accent-light);
++}
++
++.range__input:active::-moz-range-thumb {
++  background: var(--color-accent);
++}
++
++.range__input:focus-visible::-webkit-slider-thumb {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 2px;
++}
++
++.range__input:focus-visible::-moz-range-thumb {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 2px;
++}
++
++.range__scale {
++  position: relative;
++  height: 19px;
++  margin-top: 8px;
++  font-size: 16px;
++  line-height: 19px;
++  color: var(--color-gray-light);
++}
++
++.range__value,
++.range__max {
++  position: absolute;
++  top: 0;
++  white-space: nowrap;
++}
++
++.range__value_from {
++  left: var(--from);
++  transform: translateX(calc(var(--from) * -1));
++}
++
++.range__value_to {
++  left: var(--to);
++  transform: translateX(calc(var(--to) * -1));
++}
++
++.range__max {
++  right: 0;
++}
+diff --git a/src/shared/ui/RangeSlider.tsx b/src/shared/ui/RangeSlider.tsx
+new file mode 100644
+index 0000000..526a2ae
+--- /dev/null
++++ b/src/shared/ui/RangeSlider.tsx
+@@ -0,0 +1,71 @@
++import type { CSSProperties } from 'react';
++import './RangeSlider.css';
++
++export type Range = readonly [number, number];
++
++interface RangeSliderProps {
++  min: number;
++  max: number;
++  step?: number;
++  value: Range;
++  onChange: (value: Range) => void;
++  /** Подпись для скринридера: «Стоимость», «Время отбытия» */
++  label: string;
++  format?: (value: number) => string;
++  /** price — толстая шкала 19px, time — тонкая 10px */
++  size: 'price' | 'time';
++}
++
++const percent = (value: number, min: number, max: number) => ((value - min) / (max - min)) * 100;
++
++/**
++ * Двойной ползунок на двух нативных input[type=range]: клавиатура, тач и скринридеры
++ * работают без своего кода. Над общей дорожкой ловятся только бегунки.
++ */
++export function RangeSlider(props: RangeSliderProps) {
++  const { min, max, step = 1, value, onChange, label, format = String, size } = props;
++  const [from, to] = value;
++  const style = {
++    '--from': `${percent(from, min, max)}%`,
++    '--to': `${percent(to, min, max)}%`,
++  } as CSSProperties;
++  // Подпись максимума прячется, когда правый бегунок рядом с ней
++  const showMax = percent(to, min, max) < 82;
++
++  return (
++    <div className={`range range_size_${size}`} style={style}>
++      <div className="range__track">
++        <div className="range__fill" />
++        <input
++          className="range__input"
++          type="range"
++          min={min}
++          max={max}
++          step={step}
++          value={from}
++          aria-label={`${label}: от`}
++          // Когда бегунки сошлись у правого края, левый должен лежать сверху, иначе его не сдвинуть
++          style={from >= to && from > (min + max) / 2 ? { zIndex: 2 } : undefined}
++          aria-valuetext={format(from)}
++          onChange={(event) => onChange([Math.min(Number(event.target.value), to), to])}
++        />
++        <input
++          className="range__input"
++          type="range"
++          min={min}
++          max={max}
++          step={step}
++          value={to}
++          aria-label={`${label}: до`}
++          aria-valuetext={format(to)}
++          onChange={(event) => onChange([from, Math.max(Number(event.target.value), from)])}
++        />
++      </div>
++      <div className="range__scale" aria-hidden="true">
++        <span className="range__value range__value_from">{format(from)}</span>
++        <span className="range__value range__value_to">{format(to)}</span>
++        {showMax && <span className="range__max">{format(max)}</span>}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/shared/ui/ui.test.tsx b/src/shared/ui/ui.test.tsx
+new file mode 100644
+index 0000000..572222c
+--- /dev/null
++++ b/src/shared/ui/ui.test.tsx
+@@ -0,0 +1,150 @@
++import { render, screen } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import { useState } from 'react';
++import { describe, expect, it, vi } from 'vitest';
++import { Autocomplete } from './Autocomplete';
++import { DateInput } from './DateInput';
++import { InlineSelect } from './InlineSelect';
++import { Modal } from './Modal';
++import { RangeSlider, type Range } from './RangeSlider';
++
++const CITIES = ['Москва', 'Мурманск', 'Санкт-Петербург'];
++
++function CityField({ onSelect = vi.fn() }: { onSelect?: (city: string) => void }) {
++  const [value, setValue] = useState('');
++  const options = CITIES.filter((city) => city.toLowerCase().startsWith(value.toLowerCase()));
++  return (
++    <Autocomplete
++      id="from"
++      label="Откуда"
++      value={value}
++      options={value ? options : []}
++      onInputChange={setValue}
++      onSelect={(city) => {
++        setValue(city);
++        onSelect(city);
++      }}
++    />
++  );
++}
++
++describe('автодополнение', () => {
++  it('подсказывает по первым буквам и выбирает стрелками и Enter', async () => {
++    const user = userEvent.setup();
++    const onSelect = vi.fn();
++    render(<CityField onSelect={onSelect} />);
++
++    await user.type(screen.getByRole('combobox', { name: 'Откуда' }), 'м');
++    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Москва', 'Мурманск']);
++
++    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
++    expect(onSelect).toHaveBeenCalledWith('Мурманск');
++    expect(screen.getByRole('combobox')).toHaveValue('Мурманск');
++  });
++
++  it('принимает серую подсказку по Tab', async () => {
++    const user = userEvent.setup();
++    render(<CityField />);
++
++    await user.type(screen.getByRole('combobox'), 'мо');
++    await user.keyboard('{Tab}');
++    expect(screen.getByRole('combobox')).toHaveValue('Москва');
++  });
++});
++
++function DateField() {
++  const [value, setValue] = useState('');
++  return (
++    <DateInput
++      id="date"
++      label="Дата"
++      value={value}
++      onChange={setValue}
++      variant="search"
++      min={new Date(2018, 7, 12)}
++    />
++  );
++}
++
++describe('поле даты', () => {
++  it('маскирует ввод', async () => {
++    const user = userEvent.setup();
++    render(<DateField />);
++
++    await user.type(screen.getByLabelText('Дата'), '30082018');
++    expect(screen.getByLabelText('Дата')).toHaveValue('30.08.2018');
++  });
++
++  it('выбирает день в календаре, прошедшие дни недоступны', async () => {
++    const user = userEvent.setup();
++    render(<DateField />);
++
++    await user.type(screen.getByLabelText('Дата'), '01082018');
++    await user.click(screen.getByRole('button', { name: 'Дата: выбрать в календаре' }));
++    expect(screen.getByRole('button', { name: '11 августа 2018' })).toBeDisabled();
++
++    await user.click(screen.getByRole('button', { name: '30 августа 2018' }));
++    expect(screen.getByLabelText('Дата')).toHaveValue('30.08.2018');
++    expect(screen.queryByRole('button', { name: '30 августа 2018' })).not.toBeInTheDocument();
++  });
++});
++
++describe('двойной ползунок', () => {
++  it('не даёт левому бегунку зайти за правый', () => {
++    const onChange = vi.fn<(value: Range) => void>();
++    render(
++      <RangeSlider
++        label="Стоимость"
++        size="price"
++        min={1920}
++        max={7000}
++        value={[1920, 4500]}
++        onChange={onChange}
++      />,
++    );
++
++    const from = screen.getByRole('slider', { name: 'Стоимость: от' });
++    // fireEvent через нативный сеттер: так React видит изменение значения
++    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
++    setter?.call(from, '6000');
++    from.dispatchEvent(new Event('input', { bubbles: true }));
++    expect(onChange).toHaveBeenLastCalledWith([4500, 4500]);
++  });
++});
++
++describe('выбор в строке', () => {
++  it('открывает список и меняет значение', async () => {
++    const user = userEvent.setup();
++    const onChange = vi.fn();
++    render(
++      <InlineSelect
++        label="сортировать по"
++        value="date"
++        onChange={onChange}
++        options={[
++          { value: 'date', label: 'времени' },
++          { value: 'price', label: 'стоимости' },
++        ]}
++      />,
++    );
++
++    await user.click(screen.getByRole('button', { name: /времени/ }));
++    await user.click(screen.getByRole('option', { name: 'стоимости' }));
++    expect(onChange).toHaveBeenCalledWith('price');
++  });
++});
++
++describe('модальное окно', () => {
++  it('закрывается кнопкой «Понятно»', async () => {
++    const user = userEvent.setup();
++    const onClose = vi.fn();
++    render(
++      <Modal open variant="error" title="Ошибка" onClose={onClose}>
++        <p>Текст</p>
++      </Modal>,
++    );
++
++    await user.click(screen.getByRole('button', { name: 'Понятно' }));
++    expect(onClose).toHaveBeenCalled();
++  });
++});
+diff --git a/src/test/setup.ts b/src/test/setup.ts
+index 1a9d2a8..f3299af 100644
+--- a/src/test/setup.ts
++++ b/src/test/setup.ts
+@@ -7,6 +7,15 @@ import { afterEach, vi } from 'vitest';
+ vi.stubGlobal('scrollTo', vi.fn());
+ Element.prototype.scrollIntoView = vi.fn();
+ 
++// В jsdom у <dialog> нет showModal/close — достаточно переключать атрибут open
++HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
++  this.setAttribute('open', '');
++};
++HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
++  this.removeAttribute('open');
++  this.dispatchEvent(new Event('close'));
++};
++
+ // globals в Vitest выключены, поэтому автоочистка Testing Library не срабатывает сама
+ afterEach(() => {
+   cleanup();
