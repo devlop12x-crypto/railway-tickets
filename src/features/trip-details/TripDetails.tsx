@@ -1,3 +1,4 @@
+import { useId, useState, type ReactNode } from 'react';
 import { formatPrice } from '../../shared/lib/formatPrice';
 import { Icon } from '../../shared/ui/Icon';
 import './TripDetails.css';
@@ -19,26 +20,54 @@ export interface TripDetailsData {
   total: number;
 }
 
-function CollapseButton({ label }: { label: string }) {
+interface SectionProps {
+  title: string;
+  /** Значок перед заголовком и дата после него */
+  icon: ReactNode;
+  date?: string;
+  children: ReactNode;
+}
+
+/** Раздел панели: шапка всегда видна, содержимое сворачивается кнопкой «−» / «+» */
+function Section({ title, icon, date, children }: SectionProps) {
+  const id = useId();
+  const [open, setOpen] = useState(true);
+
   return (
-    <button className="trip-details__collapse" type="button" aria-label={label} aria-expanded />
+    <section className="trip-details__section" aria-labelledby={`${id}-title`}>
+      <div className="trip-details__head">
+        {icon}
+        <h3 className="trip-details__title" id={`${id}-title`}>
+          {title}
+        </h3>
+        {date && <span className="trip-details__date">{date}</span>}
+        <button
+          className={`trip-details__collapse${open ? '' : ' trip-details__collapse_closed'}`}
+          type="button"
+          aria-label={`${open ? 'Свернуть' : 'Развернуть'}: ${title}`}
+          aria-expanded={open}
+          aria-controls={`${id}-body`}
+          onClick={() => setOpen(!open)}
+        />
+      </div>
+      <div id={`${id}-body`} hidden={!open}>
+        {children}
+      </div>
+    </section>
   );
 }
 
 function Leg({ leg, direction }: { leg: TripDetailsLeg; direction: 'there' | 'back' }) {
-  const title = direction === 'there' ? 'Туда' : 'Обратно';
-
   return (
-    <section className="trip-details__section">
-      <div className="trip-details__head">
+    <Section
+      title={direction === 'there' ? 'Туда' : 'Обратно'}
+      date={leg.date}
+      icon={
         <span className="trip-details__badge">
           <Icon name={direction === 'there' ? 'arrowForward' : 'arrowBack'} size={18} />
         </span>
-        <h3 className="trip-details__title">{title}</h3>
-        <span className="trip-details__date">{leg.date}</span>
-        <CollapseButton label={`Свернуть: ${title}`} />
-      </div>
-
+      }
+    >
       <dl className="trip-details__train">
         <dt>№ Поезда</dt>
         <dd className="trip-details__number">{leg.trainNumber}</dd>
@@ -79,7 +108,7 @@ function Leg({ leg, direction }: { leg: TripDetailsLeg; direction: 'there' | 'ba
           <span className="trip-details__station">{leg.to.station}</span>
         </p>
       </div>
-    </section>
+    </Section>
   );
 }
 
@@ -93,12 +122,10 @@ export function TripDetails({ data }: { data: TripDetailsData }) {
       <Leg leg={data.there} direction="there" />
       {data.back && <Leg leg={data.back} direction="back" />}
 
-      <section className="trip-details__section">
-        <div className="trip-details__head">
-          <Icon className="trip-details__person" name="person" size={30} />
-          <h3 className="trip-details__title">Пассажиры</h3>
-          <CollapseButton label="Свернуть: Пассажиры" />
-        </div>
+      <Section
+        title="Пассажиры"
+        icon={<Icon className="trip-details__person" name="person" size={30} />}
+      >
         <ul className="trip-details__passengers">
           {data.passengers.map(({ label, price }) => (
             <li key={label}>
@@ -110,7 +137,7 @@ export function TripDetails({ data }: { data: TripDetailsData }) {
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
       <div className="trip-details__total">
         <span>Итог</span>

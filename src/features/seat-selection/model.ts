@@ -1,5 +1,6 @@
 import { seatPrice, type CoachSet, type ServiceId } from '../../entities/coach/coach';
 import type { SeatClass } from '../../entities/train/types';
+import { MAX_TICKETS } from '../../shared/config/order';
 
 /** Логика выбора мест в одном направлении без вёрстки */
 
@@ -10,8 +11,7 @@ export interface TicketCounts {
   infants: number;
 }
 
-/** Билетов с местом в одном заказе: взрослые и дети вместе */
-export const MAX_TICKETS = 5;
+export { MAX_TICKETS };
 
 export interface SeatRef {
   coach: string;

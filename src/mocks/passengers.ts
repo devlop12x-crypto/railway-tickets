@@ -1,29 +1,24 @@
-import type { PassengerDraft } from '../features/passenger-form/PassengerCard';
+import { createPassenger, type PassengerDraft } from '../features/passenger-form/model';
 
-/** Пассажиры с макета: взрослая Ирина и ребёнок Кирилл, третий — свёрнут */
+/** Пассажиры с макетов: Ирина заполнена, у Кирилла не хватает свидетельства, третий пуст */
 export const MOCK_PASSENGERS: PassengerDraft[] = [
   {
-    type: 'adult',
+    ...createPassenger('adult'),
     lastName: 'Мартынюк',
     firstName: 'Ирина',
     patronymic: 'Эдуардовна',
     gender: 'female',
-    birthDate: '',
-    limitedMobility: false,
-    document: 'passport',
-    series: '',
-    number: '',
+    birthDate: '17.02.1985',
+    series: '4204',
+    number: '380694',
   },
   {
-    type: 'child',
-    lastName: '',
-    firstName: '',
-    patronymic: '',
+    ...createPassenger('child'),
+    lastName: 'Мартынюк',
+    firstName: 'Кирилл',
+    patronymic: 'Сергеевич',
     gender: 'male',
-    birthDate: '',
-    limitedMobility: false,
-    document: 'birth',
-    series: '',
-    number: '',
+    birthDate: '25.01.2020',
   },
+  createPassenger('adult'),
 ];

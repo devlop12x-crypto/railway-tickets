@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import email from '../assets/images/success/email.png';
 import conductor from '../assets/images/success/conductor.png';
@@ -40,6 +41,45 @@ const RATING_MAX = 5;
  * Благодарность за заказ. Номер, сумма и имя — пока из макета:
  * настоящие данные заказа придут на этапе 4, оценка заработает на этапе 3.
  */
+/**
+ * Оценка сервиса: наведение подсвечивает звёзды до курсора, клик ставит оценку.
+ * Отправка оценки — этап 4
+ */
+function Rating() {
+  const [value, setValue] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const shown = hovered || value;
+
+  return (
+    <div className="rating" role="group" aria-labelledby="rating-label">
+      <span className="rating__label" id="rating-label">
+        Оценить сервис
+      </span>
+      <div className="rating__stars" onMouseLeave={() => setHovered(0)}>
+        {Array.from({ length: RATING_MAX }, (_, index) => {
+          const score = index + 1;
+          return (
+            <button
+              key={score}
+              className={`rating__star${score <= shown ? ' rating__star_filled' : ''}`}
+              type="button"
+              aria-label={`Оценка ${score} из ${RATING_MAX}`}
+              aria-pressed={score === value}
+              onMouseEnter={() => setHovered(score)}
+              onClick={() => setValue(score)}
+            >
+              <Icon name={score <= shown ? 'star' : 'starOutline'} size={54} />
+            </button>
+          );
+        })}
+      </div>
+      <span className="rating__thanks" role="status">
+        {value > 0 && 'Спасибо за оценку!'}
+      </span>
+    </div>
+  );
+}
+
 export function SuccessPage() {
   return (
     <main>
@@ -91,23 +131,7 @@ export function SuccessPage() {
           </div>
 
           <footer className="success-card__footer">
-            <div className="rating" role="group" aria-labelledby="rating-label">
-              <span className="rating__label" id="rating-label">
-                Оценить сервис
-              </span>
-              <div className="rating__stars">
-                {Array.from({ length: RATING_MAX }, (_, index) => (
-                  <button
-                    key={index}
-                    className="rating__star"
-                    type="button"
-                    aria-label={`Оценка ${index + 1} из ${RATING_MAX}`}
-                  >
-                    <Icon name="starOutline" size={54} />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <Rating />
             <Link className="button button_variant_outline-dark" to={ROUTES.home}>
               Вернуться на главную
             </Link>

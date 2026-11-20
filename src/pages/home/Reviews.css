@@ -89,3 +89,8 @@
 .reviews__dot:active {
   background: #c4c4c4;
 }
+
+.reviews__dot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
