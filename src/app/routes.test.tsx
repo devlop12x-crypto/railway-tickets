@@ -31,10 +31,17 @@ describe('маршруты', () => {
     await user.click(screen.getByRole('button', { name: 'Далее' }));
     expect(heading('Пассажиры')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Далее' }));
+    // Ирина заполнена на макете; Кириллу — свидетельство, третьего пассажира убираем
+    const kirill = screen.getByRole('article', { name: 'Пассажир 2' });
+    await user.type(within(kirill).getByLabelText('Номер'), 'VIII-ЫП-123456');
+    await user.click(screen.getByRole('button', { name: 'Удалить пассажира 3' }));
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
     expect(heading('Персональные данные и способ оплаты')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Купить билеты' }));
+    await user.type(screen.getByLabelText('Контактный телефон'), '9161234567');
+    await user.type(screen.getByLabelText('E-mail'), 'inbox@gmail.ru');
+    await user.click(screen.getByRole('radio', { name: 'Онлайн' }));
+    await user.click(screen.getByRole('button', { name: 'Купить билеты' }));
     expect(heading('Проверка заказа')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Подтвердить' }));

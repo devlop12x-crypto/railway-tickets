@@ -32,6 +32,11 @@
   font-size: 18px;
 }
 
+.input_invalid {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
 .input::placeholder {
   color: #c4c4c4;
 }

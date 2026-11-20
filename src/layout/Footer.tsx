@@ -1,6 +1,8 @@
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { ANCHORS } from '../shared/config/routes';
+import { isEmail } from '../shared/lib/validation';
 import { Icon } from '../shared/ui/Icon';
+import { Modal } from '../shared/ui/Modal';
 import type { IconName } from '../shared/ui/icons';
 import './Footer.css';
 
@@ -32,10 +34,75 @@ const SOCIALS: { icon: IconName; label: string; href: string }[] = [
   { icon: 'twitter', label: 'Twitter', href: 'https://twitter.com/' },
 ];
 
-export function Footer() {
-  // Валидация и отправка подписки — этапы 3 и 4
-  const handleSubscribe = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
+/**
+ * Подписка: адрес проверяется при отправке, ошибка — под полем, успех — окном.
+ * Запрос /subscribe — этап 4
+ */
+function SubscribeForm() {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [subscribed, setSubscribed] = useState('');
 
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const value = email.trim();
+    if (!value) {
+      setError('Укажите e-mail');
+      return;
+    }
+    if (!isEmail(value)) {
+      setError('E-mail указан некорректно, например inbox@gmail.ru');
+      return;
+    }
+    setError('');
+    setSubscribed(value);
+    setEmail('');
+  };
+
+  return (
+    <form className="subscribe" noValidate onSubmit={submit}>
+      <label className="subscribe__label" htmlFor="subscribe-email">
+        Будьте в курсе событий
+      </label>
+      <div className="subscribe__row">
+        <input
+          className={`subscribe__input${error ? ' subscribe__input_invalid' : ''}`}
+          id="subscribe-email"
+          type="email"
+          name="email"
+          placeholder="e-mail"
+          autoComplete="email"
+          value={email}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'subscribe-error' : undefined}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            // Ошибка уходит, как только пользователь начал исправлять
+            if (error) setError('');
+          }}
+        />
+        <button className="button button_variant_ghost subscribe__submit" type="submit">
+          Отправить
+        </button>
+      </div>
+      {error && (
+        <p className="subscribe__error" id="subscribe-error">
+          {error}
+        </p>
+      )}
+      <Modal
+        open={Boolean(subscribed)}
+        onClose={() => setSubscribed('')}
+        variant="info"
+        title="Вы подписаны"
+      >
+        Новости и акции будут приходить на {subscribed}
+      </Modal>
+    </form>
+  );
+}
+
+export function Footer() {
   return (
     <footer className="footer">
       <div className="container footer__columns">
@@ -71,24 +138,7 @@ export function Footer() {
             <h2 className="footer__title" id="footer-subscribe">
               Подписка
             </h2>
-            <form className="subscribe" onSubmit={handleSubscribe}>
-              <label className="subscribe__label" htmlFor="subscribe-email">
-                Будьте в курсе событий
-              </label>
-              <div className="subscribe__row">
-                <input
-                  className="subscribe__input"
-                  id="subscribe-email"
-                  type="email"
-                  name="email"
-                  placeholder="e-mail"
-                  autoComplete="email"
-                />
-                <button className="button button_variant_ghost subscribe__submit" type="submit">
-                  Отправить
-                </button>
-              </div>
-            </form>
+            <SubscribeForm />
           </section>
 
           <section className="footer__socials" aria-labelledby="footer-socials">

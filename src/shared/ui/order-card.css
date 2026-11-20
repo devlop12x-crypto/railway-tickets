@@ -46,8 +46,20 @@
 /* Кнопка «Далее» / «Купить билеты» под карточками */
 .order-next {
   display: flex;
+  gap: 32px;
+  align-items: center;
   justify-content: flex-end;
   margin-top: 103px;
+}
+
+/* Почему «Далее» пока недоступна */
+.order-next__hint {
+  max-width: 420px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 19px;
+  text-align: right;
+  color: var(--color-gray);
 }
 
 .order-next__button {

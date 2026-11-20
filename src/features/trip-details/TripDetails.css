@@ -74,6 +74,23 @@
   transform: translateY(-50%);
 }
 
+/* Свёрнуто: «+» — вторая черта поперёк */
+.trip-details__collapse_closed::before {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 10px;
+  height: 2px;
+  content: '';
+  background: #c4c4c4;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.trip-details__collapse:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .trip-details__collapse:hover {
   border-color: var(--color-accent-light);
 }

@@ -1,22 +1,29 @@
-import { useId } from 'react';
-import { Link } from 'react-router';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { ROUTES } from '../shared/config/routes';
 import { PageTitle } from '../shared/ui/PageTitle';
 import { MOCK_TRIP_DETAILS } from '../mocks/order';
 import { TripDetails } from '../features/trip-details/TripDetails';
+import { PaymentForm } from '../features/payment/PaymentForm';
+import type { PaymentValues } from '../features/payment/model';
 import './PaymentPage.css';
 
-const PERSON = [
-  ['lastName', 'Фамилия', 'Мартынюк'],
-  ['firstName', 'Имя', 'Ирина'],
-  ['patronymic', 'Отчество', 'Эдуардовна'],
-] as const;
+const FORM_ID = 'payment-form';
 
-const ONLINE_SYSTEMS = ['Банковской картой', 'PayPal', 'Visa QIWI Wallet'];
+/** Покупатель с макета — Ирина; телефон, почту и способ оплаты вводит пользователь */
+const INITIAL: PaymentValues = {
+  lastName: 'Мартынюк',
+  firstName: 'Ирина',
+  patronymic: 'Эдуардовна',
+  phone: '',
+  email: '',
+  method: '',
+};
 
-/** Персональные данные покупателя и способ оплаты. Валидация — этап 3 */
+/** Персональные данные покупателя и способ оплаты. На этапе 4 значения уйдут в заказ */
 export function PaymentPage() {
-  const id = useId();
+  const navigate = useNavigate();
+  const [values, setValues] = useState(INITIAL);
 
   return (
     <>
@@ -26,79 +33,20 @@ export function PaymentPage() {
         <h1 className="visually-hidden" id="payment-title">
           Персональные данные и способ оплаты
         </h1>
-        <form className="order-card" onSubmit={(event) => event.preventDefault()}>
-          <header className="order-card__head order-card__head_plain">
-            <h2 className="order-card__title">Персональные данные</h2>
-          </header>
-          <div className="order-card__section payment__personal">
-            <div className="payment__names">
-              {PERSON.map(([name, label, value]) => (
-                <div key={name} className="field">
-                  <label className="field__label field__label_strong" htmlFor={`${id}-${name}`}>
-                    {label}
-                  </label>
-                  <input className="input" id={`${id}-${name}`} name={name} defaultValue={value} />
-                </div>
-              ))}
-            </div>
-            <div className="field payment__contact">
-              <label className="field__label field__label_strong" htmlFor={`${id}-phone`}>
-                Контактный телефон
-              </label>
-              <input
-                className="input"
-                id={`${id}-phone`}
-                type="tel"
-                autoComplete="tel"
-                placeholder="+7 ___ ___ __ __"
-              />
-            </div>
-            <div className="field payment__contact">
-              <label className="field__label field__label_strong" htmlFor={`${id}-email`}>
-                E-mail
-              </label>
-              <input
-                className="input"
-                id={`${id}-email`}
-                type="email"
-                autoComplete="email"
-                placeholder="inbox@gmail.ru"
-              />
-            </div>
-          </div>
-
-          <header className="order-card__head order-card__head_plain payment__method-head">
-            <h2 className="order-card__title">Способ оплаты</h2>
-          </header>
-          <fieldset className="payment__fieldset">
-            <legend className="visually-hidden">Способ оплаты</legend>
-            <div className="order-card__section payment__online">
-              <label className="checkbox payment__method">
-                <input className="checkbox__input" type="radio" name="payment" value="online" />
-                Онлайн
-              </label>
-              <ul className="payment__systems">
-                {ONLINE_SYSTEMS.map((system) => (
-                  <li key={system}>{system}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="order-card__section payment__cash">
-              <label className="checkbox payment__method">
-                <input className="checkbox__input" type="radio" name="payment" value="cash" />
-                Наличными
-              </label>
-            </div>
-          </fieldset>
-        </form>
-
+        <PaymentForm
+          id={FORM_ID}
+          value={values}
+          onChange={setValues}
+          onSubmit={() => void navigate(ROUTES.confirmation)}
+        />
         <div className="order-next">
-          <Link
+          <button
             className="button button_variant_primary order-next__button"
-            to={ROUTES.confirmation}
+            type="submit"
+            form={FORM_ID}
           >
             Купить билеты
-          </Link>
+          </button>
         </div>
       </section>
     </>

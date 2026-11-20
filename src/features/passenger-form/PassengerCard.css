@@ -178,6 +178,11 @@
   grid-template-columns: minmax(0, 444px) minmax(0, 207px);
 }
 
+/* Цифры паспорта вразрядку, как на макете */
+.passenger__mask {
+  letter-spacing: 4px;
+}
+
 .passenger__mask::placeholder {
   font-size: 22px;
   letter-spacing: 4px;
@@ -187,6 +192,72 @@
   min-height: 52px;
   padding: 0 22px;
   text-transform: none;
+}
+
+/* Пол не выбран: рамка группы красная */
+.passenger__gender_invalid .gender {
+  border-color: var(--color-error);
+}
+
+/* Плашка внизу карточки: ошибка вместо кнопки или «Готово» рядом с ней */
+.passenger__status {
+  align-items: center;
+  justify-content: space-between;
+  min-height: 116px;
+  border-top: 0;
+}
+
+.passenger__status_error {
+  background: var(--color-error-bg);
+}
+
+.passenger__status_success {
+  background: var(--color-success-bg);
+}
+
+.passenger__message {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin: 0;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-dark);
+}
+
+.passenger__status_success .passenger__message {
+  font-size: 22px;
+  color: var(--color-white);
+}
+
+.passenger__status-icon {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.passenger__status_error .passenger__status-icon {
+  color: var(--color-error-bg);
+  background: rgb(255 255 255 / 70%);
+}
+
+.passenger__status_success .passenger__status-icon {
+  color: var(--color-success-bg);
+  background: var(--color-white);
+}
+
+.passenger__done {
+  font-size: 18px;
+  color: var(--color-gray);
+}
+
+/* Свёрнутая карточка пассажира — белая полоса, как «Пассажир 3» на макете */
+.passenger_collapsed .order-card__head {
+  min-height: 97px;
+  background: var(--color-white);
 }
 
 /* Свёрнутые карточки */
